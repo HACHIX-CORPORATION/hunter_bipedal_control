@@ -98,7 +98,7 @@ void RLControllerBase::handleLieMode() {
 	if (standPercent_ < 1) {
 		for (int j = 0; j < hybridJointHandles_.size(); j++) {
 		  scalar_t pos_des = currentJointAngles_[j] * (1 - standPercent_) + standJointAngles_(j) * standPercent_;
-		//   hybridJointHandles_[j].setCommand(pos_des, 0, robotCfg_.controlCfg.stiffness[j], robotCfg_.controlCfg.damping[j], 0);
+		  hybridJointHandles_[j].setCommand(pos_des, 0, robotCfg_.controlCfg.stiffness[j], robotCfg_.controlCfg.damping[j], 0);
 		}
 		standPercent_ += 1 / standDuration_;
 	  } else {

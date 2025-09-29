@@ -165,12 +165,13 @@ void CustomAcController::computeObservation() {
     vector3_t zyx = rbdState_.segment(0, 3);
     matrix_t rot = getRotationMatrixFromZyxEulerAngles(zyx);
     vector3_t IMUzaxis(rot * vector3_t(0, 0, 1));
+
     vector3_t baseAngVel = rbdState_.segment(generalizedCoordinatesNum + 3, 3);
 
     vector3_t command(command_.x, command_.y, command_.yaw);
 
     vector_t jointPos = rbdState_.segment(6, actuatedDofNum_);
-    // ROS_INFO_STREAM("[CustomAcController] jointPos: \n" << jointPos.transpose());
+
     vector_t jointVel = rbdState_.segment(generalizedCoordinatesNum + 6, actuatedDofNum_);
 
     vector_t lastActions(lastActions_);
@@ -221,7 +222,7 @@ void CustomAcController::handleWalkMode() {
 
     for (int i = 0; i < hybridJointHandles_.size(); i++) {
         scalar_t pos_des = actions_[i] * robotCfg_.controlCfg.actionScale + defaultJointAngles_(i, 0);
-        // hybridJointHandles_[i].setCommand(pos_des, 0, robotCfg_.controlCfg.stiffness[i], robotCfg_.controlCfg.damping[i], 0);
+        hybridJointHandles_[i].setCommand(pos_des, 0, robotCfg_.controlCfg.stiffness[i], robotCfg_.controlCfg.damping[i], 0);
         lastActions_(i, 0) = actions_[i];
     }
 }
