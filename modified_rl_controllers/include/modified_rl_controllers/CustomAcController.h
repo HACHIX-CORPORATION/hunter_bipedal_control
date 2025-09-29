@@ -5,9 +5,6 @@
 
 namespace legged
 {
-  using namespace ocs2;
-  using namespace ocs2::legged_robot;
-
   class CustomAcController : public RLControllerBase
   {
     using tensor_element_t = float;
@@ -79,8 +76,8 @@ namespace legged
     // double pos_z_threshold_;
     // /*--------------------------------*/
 
-    vector3_t baseLinVel_;
-    vector3_t basePosition_;
+    // vector3_t baseLinVel_;
+    // vector3_t basePosition_;
     vector_t lastActions_;
     vector_t defaultJointAngles_;
 

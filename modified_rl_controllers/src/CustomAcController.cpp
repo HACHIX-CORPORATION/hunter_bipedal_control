@@ -2,7 +2,6 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/Joy.h>
-#include <kdl/frames.hpp>
 #include <pluginlib/class_list_macros.hpp>
 
 namespace legged {
@@ -16,14 +15,12 @@ bool CustomAcController::loadModel(ros::NodeHandle &nh) {
       }
 
     policyFilePath_ = policyFilePath;
-    ROS_WARN_STREAM("Load Onnx model from path : " << policyFilePath);
+    ROS_INFO_STREAM("Load Onnx model from path : " << policyFilePath);
     
     onnxEnvPrt_.reset(new Ort::Env(ORT_LOGGING_LEVEL_WARNING, "LeggedOnnxController"));
-    ROS_WARN_STREAM("Create Onnx env successfully !!!");
     Ort::SessionOptions sessionOptions;
     sessionOptions.SetInterOpNumThreads(1);
     sessionPtr_ = std::make_unique<Ort::Session>(*onnxEnvPrt_, policyFilePath.c_str(), sessionOptions);
-    ROS_WARN_STREAM("Create Onnx session successfully !!!");
     inputNames_.clear();
     outputNames_.clear();
     inputShapes_.clear();
@@ -53,15 +50,13 @@ bool CustomAcController::loadModel(ros::NodeHandle &nh) {
 }
 
 bool CustomAcController::loadRLCfg(ros::NodeHandle &nh) {
-    ROS_WARN_STREAM("Loading RL config from parameter server...");
     RLRobotCfg::InitState& initState = robotCfg_.initState;
     RLRobotCfg::ControlCfg& controlCfg = robotCfg_.controlCfg;
     RLRobotCfg::ObsScales& obsScales = robotCfg_.obsScales;
-    ROS_WARN_STREAM("Loading RL config from parameter server...1");
     int error = 0;
 
-    controlCfg.stiffness.resize(leggedInterface_->getCentroidalModelInfo().actuatedDofNum, 0.0);
-    controlCfg.damping.resize(leggedInterface_->getCentroidalModelInfo().actuatedDofNum, 0.0);
+    controlCfg.stiffness.resize(actuatedDofNum_, 0.0);
+    controlCfg.damping.resize(actuatedDofNum_, 0.0);
     // Load leg init state
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_l1_joint", initState.leg_l1_joint));
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_l2_joint", initState.leg_l2_joint));
@@ -98,14 +93,14 @@ bool CustomAcController::loadRLCfg(ros::NodeHandle &nh) {
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_r3_joint", controlCfg.damping[7]));
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_r4_joint", controlCfg.damping[8]));
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_r5_joint", controlCfg.damping[9]));
-    ROS_WARN_STREAM("Loading RL config from parameter server...7");
+
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/action_scale", controlCfg.actionScale));
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/decimation", controlCfg.decimation));
-    ROS_WARN_STREAM("Loading RL config from parameter server...8");
+
     // Load clip scales
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/clip_scales/clip_observations", robotCfg_.clipObs));
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/clip_scales/clip_actions", robotCfg_.clipActions));
-    ROS_WARN_STREAM("Loading RL config from parameter server...9");
+
     // Load obs scales
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/obs_scales/lin_vel", obsScales.linVel));
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/obs_scales/ang_vel", obsScales.angVel));
@@ -117,7 +112,6 @@ bool CustomAcController::loadRLCfg(ros::NodeHandle &nh) {
     // load size 
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/size/actions_size", actionsSize_));
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/size/observations_size", observationSize_));
-    ROS_INFO_STREAM("actionsSize_: " << actionsSize_);
     actions_.resize(actionsSize_);
     observations_.resize(observationSize_);
 
@@ -137,14 +131,15 @@ bool CustomAcController::loadRLCfg(ros::NodeHandle &nh) {
         initState.leg_r4_joint,
         initState.leg_r5_joint
     };
-    ROS_INFO_STREAM("Default joint angles: ");
-    lastActions_.resize(leggedInterface_->getCentroidalModelInfo().actuatedDofNum);
-    defaultJointAngles_.resize(leggedInterface_->getCentroidalModelInfo().actuatedDofNum);
-    ROS_INFO_STREAM("defaultJointAngles_.rows(): " << defaultJointAngles_.rows());
-    for (int i = 0; i < leggedInterface_->getCentroidalModelInfo().actuatedDofNum; i++) {
+
+    lastActions_.resize(actuatedDofNum_);
+    defaultJointAngles_.resize(actuatedDofNum_);
+    
+    for (int i = 0; i < actuatedDofNum_; i++) {
         defaultJointAngles_(i, 0) = defaultJointAngles[i];
       }
-  
+
+    ROS_INFO_STREAM("Default joint angles: " << defaultJointAngles_.transpose());
     return (error == 0);
 }
 
@@ -165,37 +160,18 @@ void CustomAcController::computeActions() {
 }
 
 void CustomAcController::computeObservation() {
-    // get data from rbdState_
-    const auto& info = leggedInterface_->getCentroidalModelInfo();
+    int generalizedCoordinatesNum = actuatedDofNum_ + 6;
 
-    Eigen::Quaternion<scalar_t> quat;
-    for (int i = 0; i < 4; i++)
-    {
-        quat.coeffs()(i) = imuSensorHandles_.getOrientation()[i];
-    };
-
-    vector3_t zyx = quatToZyx(quat);
+    vector3_t zyx = rbdState_.segment(0, 3);
     matrix_t rot = getRotationMatrixFromZyxEulerAngles(zyx);
-    vector3_t projectedGravity(rot * vector3_t(0, 0, 1));
+    vector3_t IMUzaxis(rot * vector3_t(0, 0, 1));
+    vector3_t baseAngVel = rbdState_.segment(generalizedCoordinatesNum + 3, 3);
 
-    // vector3_t zyx = rbdState_.segment<3>(0);
-    // matrix_t inverseRot = getRotationMatrixFromZyxEulerAngles(zyx).inverse();
-
-    // vector3_t baseLinVel = inverseRot * rbdState_.segment<3>(info.generalizedCoordinatesNum + 3);
-    // vector3_t baseAngVel = inverseRot * rbdState_.segment<3>(info.generalizedCoordinatesNum + 6);
-    vector3_t baseAngVel(imuSensorHandles_.getAngularVelocity()[0], imuSensorHandles_.getAngularVelocity()[1],
-    imuSensorHandles_.getAngularVelocity()[2]);
-
-    // vector3_t gravityVector(0, 0, -1);
-    // vector3_t projectedGravity(inverseRot * gravityVector);
-    
-    // ROS_WARN_STREAM("[CustomAcController] projectedGravity "<< projectedGravity[0] << " , " <<projectedGravity[1]<<" , "<<projectedGravity[2]);
-    
     vector3_t command(command_.x, command_.y, command_.yaw);
 
-    vector_t jointPos = rbdState_.segment(6, info.actuatedDofNum);
-
-    vector_t jointVel = rbdState_.segment(6 + info.generalizedCoordinatesNum, info.actuatedDofNum);
+    vector_t jointPos = rbdState_.segment(6, actuatedDofNum_);
+    // ROS_INFO_STREAM("[CustomAcController] jointPos: \n" << jointPos.transpose());
+    vector_t jointVel = rbdState_.segment(generalizedCoordinatesNum + 6, actuatedDofNum_);
 
     vector_t lastActions(lastActions_);
 
@@ -211,7 +187,7 @@ void CustomAcController::computeObservation() {
     vector_t obs(observationSize_); // 41
 
     obs << baseAngVel,                  // 3
-        projectedGravity,               // 3
+        IMUzaxis,                       // 3
         jointPos - defaultJointAngles_, // 10 
         jointVel,                       // 10
         lastActions,                    // 10

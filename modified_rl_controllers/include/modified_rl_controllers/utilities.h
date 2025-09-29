@@ -1,6 +1,6 @@
 #pragma once
-// #include "modified_rl_controllers/Types.h"
-
+#include "modified_rl_controllers/Types.h"
+#include <modified_rl_controllers/RotationTools.h>
 #include "std_msgs/Float64MultiArray.h"
 
 namespace legged {

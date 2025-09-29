@@ -8,20 +8,24 @@ find_package(catkin REQUIRED
         COMPONENTS
         roscpp
         legged_common
-        legged_estimation
-        legged_interface
         dynamic_reconfigure
         controller_interface
         angles
         )
 
-# ONNX Runtime configuration 
-# set(ONNXRUNTIME_INCLUDE_DIRS "/opt/ros/noetic/include")
-# set(ONNXRUNTIME_LIBRARIES "/opt/ros/noetic/lib/libonnxruntime.so")
-find_package(onnxruntime REQUIRED)
-find_package(PkgConfig REQUIRED)
+# Manually configure onnxruntime for catkin compatibility
+set(onnxruntime_INCLUDE_DIRS "/opt/ros/noetic/include/onnxruntime")
+set(onnxruntime_LIBRARIES "/opt/ros/noetic/lib/libonnxruntime.so")
+set(onnxruntime_FOUND TRUE)
 
-pkg_check_modules(pinocchio REQUIRED pinocchio)
+# Create imported target for onnxruntime
+add_library(onnxruntime SHARED IMPORTED)
+set_target_properties(onnxruntime PROPERTIES
+    IMPORTED_LOCATION "/opt/ros/noetic/lib/libonnxruntime.so"
+    INTERFACE_INCLUDE_DIRECTORIES "/opt/ros/noetic/include/onnxruntime"
+)
+find_package(PkgConfig REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 generate_dynamic_reconfigure_options(  
         cfg/Tutorials.cfg
@@ -35,8 +39,6 @@ catkin_package(
         CATKIN_DEPENDS
         roscpp
         legged_common
-        legged_estimation
-        legged_interface
         dynamic_reconfigure
         controller_interface
         angles
@@ -51,10 +53,9 @@ catkin_package(
 include_directories(
         include
         ${catkin_INCLUDE_DIRS}
-        ${pinocchio_INCLUDE_DIRS}
+        ${EIGEN3_INCLUDE_DIRS}
+        ${onnxruntime_INCLUDE_DIRS}
 )
-
-link_directories(${pinocchio_LIBRARY_DIRS})
 
 add_library(${PROJECT_NAME}
         src/CustomAcController.cpp
@@ -63,7 +64,6 @@ add_library(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
         ${catkin_LIBRARIES}
-        ${pinocchio_LIBRARIES}
         onnxruntime
         )
 

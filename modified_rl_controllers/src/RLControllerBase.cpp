@@ -5,43 +5,23 @@
 namespace legged {
 
 bool RLControllerBase::init(hardware_interface::RobotHW *robotHw, ros::NodeHandle &controllerNH) {
-	std::string taskFile;
-	std::string urdfFile;
-	std::string referenceFile;
-	controllerNH.getParam("/urdfFile", urdfFile);
-	controllerNH.getParam("/taskFile", taskFile);
-	controllerNH.getParam("/referenceFile", referenceFile);	
-
-	bool verbose = false;
-
-	loadData::loadCppDataType(taskFile, "legged_robot_interface.verbose", verbose);
-	ROS_WARN_STREAM("[RLControllerBase] verbose: " << verbose);
-	setupLeggedInterface(taskFile, urdfFile, referenceFile, verbose);
-	ROS_WARN_STREAM("[RLControllerBase] Legged interface setup complete.");
-	CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
-	ROS_WARN_STREAM("[RLControllerBase] Pinocchio mapping setup complete.");
-	eeKinematicsPtr_ = std::make_shared<PinocchioEndEffectorKinematics>(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
-	leggedInterface_->modelSettings().contactNames3DoF); 
-	ROS_WARN_STREAM("[RLControllerBase] End-effector kinematics setup complete.");
-	rbdConversions_ = std::make_shared<CentroidalModelRbdConversions>(leggedInterface_->getPinocchioInterface(),
-	leggedInterface_->getCentroidalModelInfo()); 
-	ROS_WARN_STREAM("[RLControllerBase] RBD conversions setup complete.");
 	if (!loadModel(controllerNH)) {
 		ROS_ERROR_STREAM("[RLControllerBase] Failed to load the model. Ensure the path is correct and accessible.");
 		return false;
 	}
-	ROS_WARN_STREAM("[RLControllerBase] Model loaded successfully.");
+	ROS_INFO_STREAM("[RLControllerBase] Model loaded successfully.");
 	if (!loadRLCfg(controllerNH)) { 
 		
 		ROS_ERROR_STREAM("[RLControllerBase] Failed to load the rl config. Ensure the yaml is correct and accessible.");
 		return false;
 	}
-	ROS_WARN_STREAM("[RLControllerBase] RL config loaded successfully.");
+	ROS_INFO_STREAM("[RLControllerBase] RL config loaded successfully.");
 
 	// Get default stand joint angles
-	ROS_INFO_STREAM("[RLControllerBase] actuatedDofNum: " << leggedInterface_->getCentroidalModelInfo().actuatedDofNum);
-	standJointAngles_.resize(leggedInterface_->getCentroidalModelInfo().actuatedDofNum);
-	
+	ROS_INFO_STREAM("[RLControllerBase] actuatedDofNum: " << actuatedDofNum_);
+	standJointAngles_.resize(actuatedDofNum_);
+	rbdState_ = vector_t::Zero(2*(actuatedDofNum_ + 6));
+
 	auto& initState = robotCfg_.initState; 
 
 	standJointAngles_ << initState.leg_l1_joint, 
@@ -54,30 +34,24 @@ bool RLControllerBase::init(hardware_interface::RobotHW *robotHw, ros::NodeHandl
 	initState.leg_r3_joint,
 	initState.leg_r4_joint,
 	initState.leg_r5_joint;
-	ROS_INFO_STREAM("[RLControllerBase] Default stand joint angles: " << standJointAngles_.transpose());
+	ROS_INFO_STREAM("[RLControllerBase] Stand joint angles: " << standJointAngles_.transpose());
 
 	// Hardware interface
 	auto* hybridJointInterface = robotHw->get<HybridJointInterface>();
-	ROS_WARN_STREAM("[RLControllerBase] Hybrid joint interface obtained.");
-	const auto& jointNames = leggedInterface_->modelSettings().jointNames;
-	
+	const std::vector<std::string> jointNames = {"leg_l1_joint", "leg_l2_joint", "leg_l3_joint", "leg_l4_joint", "leg_l5_joint", "leg_r1_joint", "leg_r2_joint", "leg_r3_joint", "leg_r4_joint", "leg_r5_joint"};
 	std::string jointNamesStr;
 	for (const auto& jointName : jointNames) {
 		hybridJointHandles_.push_back(hybridJointInterface->getHandle(jointName)); 
 		jointNamesStr += "\n"+ jointName;
 	}
 	ROS_INFO_STREAM("[RLControllerBase] Joint names: " << jointNamesStr);
-
-	ROS_WARN_STREAM("[RLControllerBase] Hybrid joint handles obtained.");
+;
 	imuSensorHandles_ = robotHw->get<hardware_interface::ImuSensorInterface>()->getHandle("base_imu");
-	ROS_WARN_STREAM("[RLControllerBase] IMU sensor handle obtained.");
-	// State estimate 
-	setupStateEstimate(taskFile, verbose);
 
 	// Register callbacks
 	cmdVelSub_ = controllerNH.subscribe("/cmd_vel", 1, &RLControllerBase::cmdVelCallback, this);
 	joyInfoSub_ = controllerNH.subscribe("/joy", 1, &RLControllerBase::joyInfoCallback, this);
-	ROS_WARN_STREAM("[RLControllerBase] Subscribers set up successfully.");
+	ROS_INFO_STREAM("[RLControllerBase] successfully initialized.");
 	return true;
 }
 
@@ -94,19 +68,6 @@ void RLControllerBase::starting(const ros::Time &time) {
 
 	mode_ = Mode::LIE;
 	loopCount_ = 0;
-}
-
-void RLControllerBase::setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
-	bool verbose) {
-		leggedInterface_ = std::make_shared<LeggedInterface>(taskFile, urdfFile, referenceFile);
-		leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
-}
-
-void RLControllerBase::setupStateEstimate(const std::string& taskFile, bool verbose) {
-	stateEstimate_ = std::make_shared<KalmanFilterEstimate>(leggedInterface_->getPinocchioInterface(),
-	leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_);
-
-	dynamic_cast<KalmanFilterEstimate&>(*stateEstimate_).loadSettings(taskFile, verbose);
 }
 
 void RLControllerBase::update(const ros::Time &time, const ros::Duration &period) {
@@ -134,18 +95,6 @@ void RLControllerBase::update(const ros::Time &time, const ros::Duration &period
 }
 
 void RLControllerBase::handleLieMode() {
-	// if (standPercent_ < 1) {
-	// 	for (int j = 0; j < hybridJointHandles_.size(); j++) {
-	// 	  scalar_t pos_des = currentJointAngles_[j] * (1 - standPercent_) + standJointAngles_(j) * standPercent_;
-	// 	  hybridJointHandles_[j].setCommand(pos_des, 0, robotCfg_.controlCfg.stiffness[j], robotCfg_.controlCfg.damping[j], 0);
-	// 	}
-	// 	standPercent_ += 1 / standDuration_;
-	//   } else {
-	// 	for (int j = 0; j < hybridJointHandles_.size(); j++) {
-	// 		scalar_t pos_des = standJointAngles_(j);
-	// 		hybridJointHandles_[j].setCommand(pos_des, 0, robotCfg_.controlCfg.stiffness[j], robotCfg_.controlCfg.damping[j], 0);		
-	// 	}
-	//   }
 	if (standPercent_ < 1) {
 		for (int j = 0; j < hybridJointHandles_.size(); j++) {
 		  scalar_t pos_des = currentJointAngles_[j] * (1 - standPercent_) + standJointAngles_(j) * standPercent_;
@@ -173,15 +122,15 @@ void RLControllerBase::handleDefautMode() {
 // }
 
 void RLControllerBase::updateStateEstimation(const ros::Time &time, const ros::Duration &period) {
+	int generalizedCoordinatesNum = actuatedDofNum_ + 6;
 	vector_t jointPos(hybridJointHandles_.size()), jointVel(hybridJointHandles_.size());
 	Eigen::Quaternion<scalar_t> quat;
-	vector3_t angularVel, linearAccel;
-	matrix3_t orientationCovariance, angularVelCovariance, linearAccelCovariance;
+	vector3_t angularVel;
 
 	for (size_t i = 0; i < hybridJointHandles_.size(); ++i) {
 		jointPos(i) = hybridJointHandles_[i].getPosition();
 		jointVel(i) = hybridJointHandles_[i].getVelocity();
-	  }
+	}
 
 	for (size_t i = 0; i < 4; ++i) {
 	quat.coeffs()(i) = imuSensorHandles_.getOrientation()[i];
@@ -189,18 +138,15 @@ void RLControllerBase::updateStateEstimation(const ros::Time &time, const ros::D
 
 	for (size_t i = 0; i < 3; ++i) {
 		angularVel(i) = imuSensorHandles_.getAngularVelocity()[i];
-		linearAccel(i) = imuSensorHandles_.getLinearAcceleration()[i];
 	}
-
-	for (size_t i = 0; i < 9; ++i) {
-		orientationCovariance(i) = imuSensorHandles_.getOrientationCovariance()[i];
-		angularVelCovariance(i) = imuSensorHandles_.getAngularVelocityCovariance()[i];
-		linearAccelCovariance(i) = imuSensorHandles_.getLinearAccelerationCovariance()[i];
-	  }
 	
-	stateEstimate_->updateJointStates(jointPos, jointVel);
-	stateEstimate_->updateImu(quat, angularVel, linearAccel, orientationCovariance, angularVelCovariance, linearAccelCovariance);
-	rbdState_ = stateEstimate_->update(time, period);
+    rbdState_.segment(0, 3) = quatToZyx(quat);
+	rbdState_.segment(3, 3) = vector3_t::Zero(); // TODO: estimate base position
+	rbdState_.segment(6, actuatedDofNum_) = jointPos;
+
+	rbdState_.segment(generalizedCoordinatesNum, 3) = vector3_t::Zero(); // TODO: estimate base linear velocity
+	rbdState_.segment(generalizedCoordinatesNum + 3, 3) = angularVel;
+	rbdState_.segment(generalizedCoordinatesNum + 6, actuatedDofNum_) = jointVel;
 }
 
 void RLControllerBase::cmdVelCallback(const geometry_msgs::Twist &msg) {

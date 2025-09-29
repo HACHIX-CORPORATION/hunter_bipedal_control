@@ -1,6 +1,6 @@
 #pragma once
 
-// #include "modified_rl_controllers/Types.h"
+#include "modified_rl_controllers/utilities.h"
 #include <robot_state_publisher/robot_state_publisher.h>
 
 #include <controller_interface/multi_interface_controller.h>
@@ -8,13 +8,6 @@
 #include <hardware_interface/imu_sensor_interface.h>
 #include <legged_common/hardware_interface/ContactSensorInterface.h>
 #include <legged_common/hardware_interface/HybridJointInterface.h>
-#include <legged_estimation/LinearKalmanFilter.h>
-#include <legged_estimation/StateEstimateBase.h>
-#include <legged_interface/LeggedInterface.h>
-
-#include <ocs2_centroidal_model/CentroidalModelRbdConversions.h>
-#include <ocs2_mpc/SystemObservation.h>
-#include <ocs2_robotic_tools/common/RotationTransforms.h>
 
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/Float32.h>
@@ -30,7 +23,6 @@
 // #include "TutorialsConfig.h"
 #include <dynamic_reconfigure/server.h>
 #include <dynamic_reconfigure/ParamDescription.h>
-#include <kdl/chainfksolverpos_recursive.hpp>
 
 #include <atomic>
 #include <map>
@@ -38,9 +30,6 @@
 
 namespace legged
 {
-using namespace ocs2;
-using namespace legged_robot;
-
   struct RLRobotCfg
   {
     struct ControlCfg
@@ -151,9 +140,6 @@ using namespace legged_robot;
 
     virtual void cmdVelCallback(const geometry_msgs::Twist &msg);
     virtual void joyInfoCallback(const sensor_msgs::Joy &msg);
-    virtual void setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
-                                      bool verbose);
-    virtual void setupStateEstimate(const std::string& taskFile, bool verbose);
 
     Mode mode_;
     int64_t loopCount_;
@@ -161,10 +147,6 @@ using namespace legged_robot;
     // Command est_cmd_;
     // Command filted_cmd_;
     RLRobotCfg robotCfg_{};
-    
-    std::shared_ptr<StateEstimateBase> stateEstimate_;
-    std::shared_ptr<LeggedInterface> leggedInterface_;
-    std::shared_ptr<PinocchioEndEffectorKinematics> eeKinematicsPtr_;
 
     JoyInfo joyInfo;
     // std::atomic_bool emergency_stop{false};
@@ -176,7 +158,6 @@ using namespace legged_robot;
     
     vector_t rbdState_;
     // vector_t measuredRbdState_;
-    std::shared_ptr<CentroidalModelRbdConversions> rbdConversions_;
     // Proprioception propri_;
 
     // hardware interface
@@ -193,7 +174,7 @@ using namespace legged_robot;
     // controller_manager_msgs::SwitchController switchCtrlSrv_;
     // ros::ServiceClient switchCtrlClient_;
 
-    // int actuatedDofNum_ = 10;
+    int actuatedDofNum_ = 10;
 
     // ros::Publisher realJointVelPublisher_;
     // ros::Publisher realJointPosPublisher_;
