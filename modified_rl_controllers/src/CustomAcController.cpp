@@ -1,0 +1,283 @@
+#include "modified_rl_controllers/CustomAcController.h"
+#include <ros/ros.h>
+#include <geometry_msgs/Twist.h>
+#include <sensor_msgs/Joy.h>
+#include <kdl/frames.hpp>
+#include <pluginlib/class_list_macros.hpp>
+
+namespace legged {
+
+bool CustomAcController::loadModel(ros::NodeHandle &nh) {
+    std::string policyFilePath;
+
+    if (!nh.getParam("/policyFile", policyFilePath)) {
+        ROS_ERROR_STREAM("Get policy path fail from param server, some error occur!");
+        return false;
+      }
+
+    policyFilePath_ = policyFilePath;
+    ROS_WARN_STREAM("Load Onnx model from path : " << policyFilePath);
+    
+    onnxEnvPrt_.reset(new Ort::Env(ORT_LOGGING_LEVEL_WARNING, "LeggedOnnxController"));
+    ROS_WARN_STREAM("Create Onnx env successfully !!!");
+    Ort::SessionOptions sessionOptions;
+    sessionOptions.SetInterOpNumThreads(1);
+    sessionPtr_ = std::make_unique<Ort::Session>(*onnxEnvPrt_, policyFilePath.c_str(), sessionOptions);
+    ROS_WARN_STREAM("Create Onnx session successfully !!!");
+    inputNames_.clear();
+    outputNames_.clear();
+    inputShapes_.clear();
+    outputShapes_.clear();
+
+    Ort::AllocatorWithDefaultOptions allocator;
+    
+    for (int i = 0; i < sessionPtr_->GetInputCount(); i++) {
+        inputNodeNameAllocatedStrings_.push_back(sessionPtr_->GetInputNameAllocated(i, allocator));
+        inputNames_.push_back(inputNodeNameAllocatedStrings_[i].get());
+        inputShapes_.push_back(sessionPtr_->GetInputTypeInfo(i).GetTensorTypeAndShapeInfo().GetShape());
+      }
+    for (int i = 0; i < sessionPtr_->GetOutputCount(); i++) {
+    outputNodeNameAllocatedStrings_.push_back(sessionPtr_->GetOutputNameAllocated(i, allocator));
+    outputNames_.push_back(outputNodeNameAllocatedStrings_[i].get());
+    outputShapes_.push_back(sessionPtr_->GetOutputTypeInfo(i).GetTensorTypeAndShapeInfo().GetShape());
+    }
+    
+    ROS_INFO_STREAM("Load Onnx model from successfully !!!");
+    ROS_INFO_STREAM("Input node num: " << inputNames_.size());
+    ROS_INFO_STREAM("Input node names: " << inputNames_[0]);
+    ROS_INFO_STREAM("Output node num: " << outputNames_.size());
+    ROS_INFO_STREAM("Output node names: " << outputNames_[0]);
+    ROS_INFO_STREAM("Input shape: " << inputShapes_[0][0] << "x" << inputShapes_[0][1]);
+    ROS_INFO_STREAM("Output shape: " << outputShapes_[0][0] << "x" << outputShapes_[0][1]);
+    return true;
+}
+
+bool CustomAcController::loadRLCfg(ros::NodeHandle &nh) {
+    ROS_WARN_STREAM("Loading RL config from parameter server...");
+    RLRobotCfg::InitState& initState = robotCfg_.initState;
+    RLRobotCfg::ControlCfg& controlCfg = robotCfg_.controlCfg;
+    RLRobotCfg::ObsScales& obsScales = robotCfg_.obsScales;
+    ROS_WARN_STREAM("Loading RL config from parameter server...1");
+    int error = 0;
+
+    controlCfg.stiffness.resize(leggedInterface_->getCentroidalModelInfo().actuatedDofNum, 0.0);
+    controlCfg.damping.resize(leggedInterface_->getCentroidalModelInfo().actuatedDofNum, 0.0);
+    // Load leg init state
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_l1_joint", initState.leg_l1_joint));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_l2_joint", initState.leg_l2_joint));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_l3_joint", initState.leg_l3_joint));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_l4_joint", initState.leg_l4_joint));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_l5_joint", initState.leg_l5_joint));
+
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_r1_joint", initState.leg_r1_joint));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_r2_joint", initState.leg_r2_joint));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_r3_joint", initState.leg_r3_joint));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_r4_joint", initState.leg_r4_joint));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_r5_joint", initState.leg_r5_joint));
+
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_l1_joint", controlCfg.stiffness[0]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_l2_joint", controlCfg.stiffness[1]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_l3_joint", controlCfg.stiffness[2]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_l4_joint", controlCfg.stiffness[3]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_l5_joint", controlCfg.stiffness[4]));
+    
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_r1_joint", controlCfg.stiffness[5]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_r2_joint", controlCfg.stiffness[6]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_r3_joint", controlCfg.stiffness[7]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_r4_joint", controlCfg.stiffness[8]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_r5_joint", controlCfg.stiffness[9]));
+
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_l1_joint", controlCfg.damping[0]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_l2_joint", controlCfg.damping[1]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_l3_joint", controlCfg.damping[2]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_l4_joint", controlCfg.damping[3]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_l5_joint", controlCfg.damping[4]));
+
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_r1_joint", controlCfg.damping[5]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_r2_joint", controlCfg.damping[6]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_r3_joint", controlCfg.damping[7]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_r4_joint", controlCfg.damping[8]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_r5_joint", controlCfg.damping[9]));
+    ROS_WARN_STREAM("Loading RL config from parameter server...7");
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/action_scale", controlCfg.actionScale));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/decimation", controlCfg.decimation));
+    ROS_WARN_STREAM("Loading RL config from parameter server...8");
+    // Load clip scales
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/clip_scales/clip_observations", robotCfg_.clipObs));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/clip_scales/clip_actions", robotCfg_.clipActions));
+    ROS_WARN_STREAM("Loading RL config from parameter server...9");
+    // Load obs scales
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/obs_scales/lin_vel", obsScales.linVel));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/obs_scales/ang_vel", obsScales.angVel));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/obs_scales/dof_pos", obsScales.dofPos));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/obs_scales/dof_vel", obsScales.dofVel));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/obs_scales/quat", obsScales.quat));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/obs_scales/height_measurements", obsScales.heightMeasurements));
+
+    // load size 
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/size/actions_size", actionsSize_));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/size/observations_size", observationSize_));
+    ROS_INFO_STREAM("actionsSize_: " << actionsSize_);
+    actions_.resize(actionsSize_);
+    observations_.resize(observationSize_);
+
+    command_.x = 0.0;
+    command_.y = 0.0;
+    command_.yaw = 0.0;
+
+    std::vector<scalar_t> defaultJointAngles{
+        initState.leg_l1_joint,
+        initState.leg_l2_joint,
+        initState.leg_l3_joint,
+        initState.leg_l4_joint,
+        initState.leg_l5_joint,
+        initState.leg_r1_joint,
+        initState.leg_r2_joint,
+        initState.leg_r3_joint,
+        initState.leg_r4_joint,
+        initState.leg_r5_joint
+    };
+    ROS_INFO_STREAM("Default joint angles: ");
+    lastActions_.resize(leggedInterface_->getCentroidalModelInfo().actuatedDofNum);
+    defaultJointAngles_.resize(leggedInterface_->getCentroidalModelInfo().actuatedDofNum);
+    ROS_INFO_STREAM("defaultJointAngles_.rows(): " << defaultJointAngles_.rows());
+    for (int i = 0; i < leggedInterface_->getCentroidalModelInfo().actuatedDofNum; i++) {
+        defaultJointAngles_(i, 0) = defaultJointAngles[i];
+      }
+  
+    return (error == 0);
+}
+
+void CustomAcController::computeActions() {
+    Ort::MemoryInfo memoryInfo = Ort::MemoryInfo::CreateCpu(OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
+
+    std::vector<Ort::Value> inputValues;
+
+    inputValues.push_back(Ort::Value::CreateTensor<tensor_element_t>(memoryInfo, observations_.data(), observations_.size(),
+                                inputShapes_[0].data(), inputShapes_[0].size()));
+
+    Ort::RunOptions runOptions;
+    std::vector<Ort::Value> outputValues = sessionPtr_->Run(runOptions, inputNames_.data(), inputValues.data(), 1, outputNames_.data(), 1);
+    
+    for (int i = 0; i < actionsSize_; i++) {
+        actions_[i] = *(outputValues[0].GetTensorMutableData<tensor_element_t>() + i);
+    }
+}
+
+void CustomAcController::computeObservation() {
+    // get data from rbdState_
+    const auto& info = leggedInterface_->getCentroidalModelInfo();
+
+    Eigen::Quaternion<scalar_t> quat;
+    for (int i = 0; i < 4; i++)
+    {
+        quat.coeffs()(i) = imuSensorHandles_.getOrientation()[i];
+    };
+
+    vector3_t zyx = quatToZyx(quat);
+    matrix_t rot = getRotationMatrixFromZyxEulerAngles(zyx);
+    vector3_t projectedGravity(rot * vector3_t(0, 0, 1));
+
+    // vector3_t zyx = rbdState_.segment<3>(0);
+    // matrix_t inverseRot = getRotationMatrixFromZyxEulerAngles(zyx).inverse();
+
+    // vector3_t baseLinVel = inverseRot * rbdState_.segment<3>(info.generalizedCoordinatesNum + 3);
+    // vector3_t baseAngVel = inverseRot * rbdState_.segment<3>(info.generalizedCoordinatesNum + 6);
+    vector3_t baseAngVel(imuSensorHandles_.getAngularVelocity()[0], imuSensorHandles_.getAngularVelocity()[1],
+    imuSensorHandles_.getAngularVelocity()[2]);
+
+    // vector3_t gravityVector(0, 0, -1);
+    // vector3_t projectedGravity(inverseRot * gravityVector);
+    
+    // ROS_WARN_STREAM("[CustomAcController] projectedGravity "<< projectedGravity[0] << " , " <<projectedGravity[1]<<" , "<<projectedGravity[2]);
+    
+    vector3_t command(command_.x, command_.y, command_.yaw);
+
+    vector_t jointPos = rbdState_.segment(6, info.actuatedDofNum);
+
+    vector_t jointVel = rbdState_.segment(6 + info.generalizedCoordinatesNum, info.actuatedDofNum);
+
+    vector_t lastActions(lastActions_);
+
+    // Note: This values are hardcoded for walking mode
+    scalar_t gaitFrequency = 0.139;
+    scalar_t gait = 1.0;
+
+    // normalize data
+    // RLRobotCfg::ObsScales& obsScales = robotCfg_.obsScales;
+    // matrix_t commandScaler = Eigen::DiagonalMatrix<scalar_t, 3>(obsScales.linVel, obsScales.linVel, obsScales.angVel);
+    
+    // get observation
+    vector_t obs(observationSize_); // 41
+
+    obs << baseAngVel,                  // 3
+        projectedGravity,               // 3
+        jointPos - defaultJointAngles_, // 10 
+        jointVel,                       // 10
+        lastActions,                    // 10
+        command,                        // 3
+        gaitFrequency,                  // 1
+        gait                           // 1
+        ;
+
+    // clip observation
+    for (size_t i = 0; i < obs.size(); i++) {
+        observations_[i] = static_cast<tensor_element_t>(obs(i));
+        }
+
+    scalar_t obsMin = -robotCfg_.clipObs;
+    scalar_t obsMax = robotCfg_.clipObs;
+
+    std::transform(observations_.begin(), observations_.end(), observations_.begin(),
+                    [obsMin, obsMax](scalar_t x) { return std::max(obsMin, std::min(obsMax, x)); });
+}
+
+void CustomAcController::handleWalkMode() {
+    if (loopCount_ % robotCfg_.controlCfg.decimation == 0) {
+        computeObservation();
+        computeActions();
+        scalar_t actionMin = -robotCfg_.clipActions;
+        scalar_t actionMax = robotCfg_.clipActions;
+
+        std::transform(actions_.begin(), actions_.end(), actions_.begin(),
+        [actionMin, actionMax](scalar_t x) { return std::max(actionMin, std::min(actionMax, x)); });
+    }
+
+    for (int i = 0; i < hybridJointHandles_.size(); i++) {
+        scalar_t pos_des = actions_[i] * robotCfg_.controlCfg.actionScale + defaultJointAngles_(i, 0);
+        // hybridJointHandles_[i].setCommand(pos_des, 0, robotCfg_.controlCfg.stiffness[i], robotCfg_.controlCfg.damping[i], 0);
+        lastActions_(i, 0) = actions_[i];
+    }
+}
+
+// void CustomAcController::move2standDetect() {
+//     // Default implementation, override in derived classes
+// }
+
+// void CustomAcController::pushDetect() {
+//     // Default implementation, override in derived classes
+// }
+
+// bool CustomAcController::push2standDetect() {
+//     // Default implementation, override in derived classes
+//     return false;
+// }
+
+// void CustomAcController::quickStop() {
+//     // Default implementation, override in derived classes
+// }
+
+// bool CustomAcController::kinematic() {
+//     // Default implementation, override in derived classes
+//     return false;
+// }
+
+// bool CustomAcController::computeLegForwardKinematics(const std::string &leg_name, const vector_t &joint_positions, KDL::Frame &end_effector_frame) {
+//     // Default implementation, override in derived classes
+//     return false;
+// }
+
+} // namespace legged
+
+// Export the controller class as a ROS plugin for dynamic loading
+PLUGINLIB_EXPORT_CLASS(legged::CustomAcController, controller_interface::ControllerBase)

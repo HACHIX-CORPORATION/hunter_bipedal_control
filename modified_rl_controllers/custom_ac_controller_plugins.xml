@@ -1,0 +1,7 @@
+<library path="lib/libmodified_rl_controllers">
+  <class name="legged/CustomAcController" type="legged::CustomAcController" base_class_type="controller_interface::ControllerBase">
+    <description>
+      Custom AC Controller for legged robots
+    </description>
+  </class>
+</library>

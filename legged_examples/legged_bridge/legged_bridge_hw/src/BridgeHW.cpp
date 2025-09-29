@@ -144,7 +144,7 @@ bool BridgeHW::setupJoints()
 bool BridgeHW::setupImu()
 {
   imuSensorInterface_.registerHandle(hardware_interface::ImuSensorHandle(
-      "imu_link", "imu_link", imuData_.ori, imuData_.ori_cov, imuData_.angular_vel, imuData_.angular_vel_cov,
+      "base_imu", "base_imu", imuData_.ori, imuData_.ori_cov, imuData_.angular_vel, imuData_.angular_vel_cov,
       imuData_.linear_acc, imuData_.linear_acc_cov));
   imuData_.ori_cov[0] = 0.0012;
   imuData_.ori_cov[4] = 0.0012;
