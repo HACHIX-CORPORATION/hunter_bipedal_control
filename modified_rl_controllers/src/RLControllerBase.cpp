@@ -62,8 +62,8 @@ void RLControllerBase::starting(const ros::Time &time) {
 		currentJointAngles_.push_back(hybridJointHandle.getPosition());
 	}
 
-	scalar_t durationSecs = 2.0;
-	standDuration_ = durationSecs * 1000.0;
+	scalar_t durationSecs = 4.0;
+	standDuration_ = durationSecs * 500.0;
 	standPercent_ += 1 / standDuration_;
 
 	mode_ = Mode::LIE;
