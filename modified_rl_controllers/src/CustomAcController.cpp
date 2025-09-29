@@ -3,6 +3,11 @@
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/Joy.h>
 #include <pluginlib/class_list_macros.hpp>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 namespace legged {
 
@@ -140,6 +145,50 @@ bool CustomAcController::loadRLCfg(ros::NodeHandle &nh) {
       }
 
     ROS_INFO_STREAM("Default joint angles: " << defaultJointAngles_.transpose());
+    
+    // Initialize CSV logging
+    auto t = std::time(nullptr);
+    auto tm = *std::localtime(&t);
+    std::ostringstream oss;
+
+    oss << logDir_ << std::put_time(&tm, "%Y%m%d_%H%M%S");
+    std::string timestampedFolder = oss.str();
+    
+    mkdir(timestampedFolder.c_str(), 0755);
+    ROS_INFO_STREAM("Created log folder: " << timestampedFolder);
+
+    // Initialize observation CSV file
+    std::string observationCsvFilePath_ = timestampedFolder + "/observation_data.csv";
+    observationCsvFile_.open(observationCsvFilePath_, std::ios::out);
+    if (observationCsvFile_.is_open()) {
+        observationCsvFile_ << "loop_count,";
+        observationCsvFile_ << "baseAngVel_x,baseAngVel_y,baseAngVel_z,";
+        observationCsvFile_ << "IMUzaxis_x,IMUzaxis_y,IMUzaxis_z,";
+        observationCsvFile_ << "deltaJointPos_0,deltaJointPos_1,deltaJointPos_2,deltaJointPos_3,deltaJointPos_4,deltaJointPos_5,deltaJointPos_6,deltaJointPos_7,deltaJointPos_8,deltaJointPos_9,";
+        observationCsvFile_ << "jointVel_0,jointVel_1,jointVel_2,jointVel_3,jointVel_4,jointVel_5,jointVel_6,jointVel_7,jointVel_8,jointVel_9,";
+        observationCsvFile_ << "lastActions_0,lastActions_1,lastActions_2,lastActions_3,lastActions_4,lastActions_5,lastActions_6,lastActions_7,lastActions_8,lastActions_9,";
+        observationCsvFile_ << "command_x,command_y,command_yaw,";
+        observationCsvFile_ << "gaitFrequency,gait";
+        observationCsvFile_ << std::endl;
+        ROS_INFO_STREAM("Observation CSV file opened for logging: " << observationCsvFilePath_);
+    } else {
+        ROS_ERROR_STREAM("Failed to open observation CSV file for logging: " << observationCsvFilePath_);
+    }
+    
+    // Initialize action CSV file
+    std::string actionCsvFilePath_ = timestampedFolder + "/action_data.csv";
+    actionCsvFile_.open(actionCsvFilePath_, std::ios::out);
+    if (actionCsvFile_.is_open()) {
+        actionCsvFile_ << "loop_count";
+        for (int i = 0; i < actions_.size(); i++) {
+            actionCsvFile_ << "," << "action_" << i;
+        }
+        actionCsvFile_ << std::endl;
+        ROS_INFO_STREAM("Action CSV file opened for logging: " << actionCsvFilePath_);
+    } else {
+        ROS_ERROR_STREAM("Failed to open action CSV file for logging: " << actionCsvFilePath_);
+    }
+    
     return (error == 0);
 }
 
@@ -218,6 +267,24 @@ void CustomAcController::handleWalkMode() {
 
         std::transform(actions_.begin(), actions_.end(), actions_.begin(),
         [actionMin, actionMax](scalar_t x) { return std::max(actionMin, std::min(actionMax, x)); });
+
+        // Log observation data to CSV
+        if (observationCsvFile_.is_open()) {
+            observationCsvFile_ << loopCount_;
+            for (int i = 0; i < observations_.size(); i++) {
+                observationCsvFile_ << "," << observations_[i];
+            }
+            observationCsvFile_ << std::endl;
+        }
+
+        //log action data to CSV
+        if (actionCsvFile_.is_open()) {
+            actionCsvFile_ << loopCount_;
+            for (int i = 0; i < actions_.size(); i++) {
+                actionCsvFile_ << "," << actions_[i];
+            }
+            actionCsvFile_ << std::endl;
+        }
     }
 
     for (int i = 0; i < hybridJointHandles_.size(); i++) {

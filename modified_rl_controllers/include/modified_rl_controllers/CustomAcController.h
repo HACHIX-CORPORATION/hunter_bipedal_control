@@ -2,6 +2,7 @@
 
 #include "modified_rl_controllers/RLControllerBase.h"
 #include "modified_rl_controllers/utilities.h"
+#include <fstream>
 
 namespace legged
 {
@@ -96,6 +97,11 @@ namespace legged
     // double sample_rate_; // 采样率
     // double alpha_;       // 滤波器系数
     // vector_t filted_action_;
+
+    // CSV logging
+    std::ofstream observationCsvFile_;
+    std::ofstream actionCsvFile_;
+    std::string logDir_ = "/home/encos/Desktop/hunter_bipedal_control/src/hunter_bipedal_control/modified_rl_controllers/logs/";
   };
 
 } // namespace legged
