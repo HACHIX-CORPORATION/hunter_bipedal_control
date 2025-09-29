@@ -37,7 +37,7 @@ LeggedRobotCfg:
       leg_r4_joint: 2.5
       leg_r5_joint: 0.1
     action_scale: 1.0
-    decimation: 5
+    decimation: 10
     cycle_time: 0.64
 
   normalization:
