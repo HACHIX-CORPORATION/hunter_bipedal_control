@@ -95,26 +95,26 @@ void RLControllerBase::update(const ros::Time &time, const ros::Duration &period
 }
 
 void RLControllerBase::handleLieMode() {
-	if (standPercent_ < 1) {
-		for (int j = 0; j < hybridJointHandles_.size(); j++) {
-		  scalar_t pos_des = currentJointAngles_[j] * (1 - standPercent_) + standJointAngles_(j) * standPercent_;
-		  hybridJointHandles_[j].setCommand(pos_des, 0, robotCfg_.controlCfg.stiffness[j], robotCfg_.controlCfg.damping[j], 0);
-		}
-		standPercent_ += 1 / standDuration_;
-	  } else {
-		mode_ = Mode::WALK;
-	  }
+
 }
 
 void RLControllerBase::handleStandMode() {
-	if (loopCount_ > 5000) {
-		mode_ = Mode::WALK;
-	  }
+
+}
+
+void RLControllerBase::handleWalkMode() {
+
 }
 
 void RLControllerBase::handleDefautMode() {
 	//  TODO: Implement default mode behavior
-	ROS_INFO_STREAM("[RLControllerBase] Default mode is active. No specific behavior implemented.");
+	for (int j = 0; j < hybridJointHandles_.size(); j++) {
+		scalar_t pos_des = currentJointAngles_[j] * (1 - standPercent_) + standJointAngles_(j) * standPercent_;
+		hybridJointHandles_[j].setCommand(pos_des, 0, robotCfg_.controlCfg.stiffness[j], robotCfg_.controlCfg.damping[j], 0);
+	}
+	if (standPercent_ < 1) {
+		standPercent_ += 1 / standDuration_;
+	}
 }
 
 // void RLControllerBase::dynamicParamCallback(legged_debugger::TutorialsConfig &config, uint32_t level) {
@@ -150,13 +150,26 @@ void RLControllerBase::updateStateEstimation(const ros::Time &time, const ros::D
 }
 
 void RLControllerBase::cmdVelCallback(const geometry_msgs::Twist &msg) {
-	command_.x = msg.linear.x;
-	command_.y = msg.linear.y;
-	command_.yaw = msg.angular.z;
+	// command_.x = msg.linear.x;
+	// command_.y = msg.linear.y;
+	// command_.yaw = msg.angular.z;
 }
 
 void RLControllerBase::joyInfoCallback(const sensor_msgs::Joy &msg) {
-	//TODO: Implement
+	if (msg.buttons[7] == 1) { // Start button
+		mode_ = Mode::LIE;
+		ROS_INFO_STREAM("[RLControllerBase] Switching to LIE mode.");
+	} else if (msg.buttons[4] == 1 && msg.buttons[0] == 1) { // LB + A button
+		mode_ = Mode::STAND;
+		ROS_INFO_STREAM("[RLControllerBase] Switching to STAND mode.");
+	} else if (msg.buttons[4] == 1 && msg.buttons[1] == 1) { // LB + B button
+		mode_ = Mode::WALK;
+		ROS_INFO_STREAM("[RLControllerBase] Switching to WALK mode.");
+	} else if (msg.buttons[4] == 1 && msg.buttons[2] == 1) { // LB + X button
+		standPercent_ = 0.0;
+		mode_ = Mode::DEFAULT;
+		ROS_INFO_STREAM("[RLControllerBase] Switching to DEFAULT mode.");
+	}
 }
 
 } // namespace legged

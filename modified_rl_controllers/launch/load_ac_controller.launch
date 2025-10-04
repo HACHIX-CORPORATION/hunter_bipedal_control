@@ -6,14 +6,15 @@
     <include file="$(find modified_rl_controllers)/launch/joy_teleop.launch"/>
     
     <rosparam file="$(find modified_rl_controllers)/config/$(env ROBOT_TYPE)_kd.yaml" command="load"/>
-    <param name="policyFile" value="$(find modified_rl_controllers)/policy/$(env ROBOT_TYPE)/stand_202509282043.onnx"/>
+    <param name="policyFile" value="$(find modified_rl_controllers)/policy/$(env ROBOT_TYPE)/stand_202510031605_best.onnx"/>
     <rosparam file="$(find modified_rl_controllers)/config/controllers.yaml" command="load"/>
     <rosparam file="$(find modified_rl_controllers)/config/$(env ROBOT_TYPE)_amp.yaml" command="load"/>
 
 
     <node name="controller_spawner" pkg="controller_manager" type="spawner" 
         respawn="false" output="screen" args="
-            controllers/custom_ac_controller"/>
+            controllers/custom_ac_controller
+            controllers/joint_state_controller"/>
 
     <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen">
     </node>

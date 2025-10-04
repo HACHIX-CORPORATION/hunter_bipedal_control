@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import os
 from enum import IntEnum
 
-LOG_DIR = f"{os.path.dirname(os.path.abspath(__file__))}/20250929_164340"
+LOG_DIR = f"{os.path.dirname(os.path.abspath(__file__))}/20251003_160559"
 OBSERVATION_DATA_FILENAME = "observation_data.csv"
 ACTION_DATA_FILENAME = "action_data.csv"
 LOOP_RATE = 0.002

@@ -20,7 +20,7 @@ namespace legged
     bool loadRLCfg(ros::NodeHandle &nh) override;
     void computeActions() override;
     void computeObservation() override;
-    void handleWalkMode() override;
+    void handleStandMode() override;
     // void move2standDetect();
     // void pushDetect();
     // bool push2standDetect();

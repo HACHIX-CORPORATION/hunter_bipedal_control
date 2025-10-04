@@ -128,7 +128,7 @@ namespace legged
     virtual void handleLieMode();
     virtual void handleStandMode();
     virtual void handleDefautMode();
-    virtual void handleWalkMode() {};
+    virtual void handleWalkMode();
     // virtual bool computeLegForwardKinematics(const std::string &leg_name, const vector_t &joint_positions, KDL::Frame &end_effector_frame);
 
     // std::unique_ptr<dynamic_reconfigure::Server<legged_debugger::TutorialsConfig>> server_ptr_;

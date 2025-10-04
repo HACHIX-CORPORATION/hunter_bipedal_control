@@ -226,7 +226,7 @@ void CustomAcController::computeObservation() {
     vector_t lastActions(lastActions_);
 
     // Note: This values are hardcoded for walking mode
-    scalar_t gaitFrequency = 0.139;
+    scalar_t gaitFrequency = 0.279;
     scalar_t gait = 1.0;
 
     // normalize data
@@ -238,8 +238,8 @@ void CustomAcController::computeObservation() {
 
     obs << baseAngVel,                  // 3
         IMUzaxis,                       // 3
-        jointPos - defaultJointAngles_, // 10 
-        jointVel,                       // 10
+        (jointPos - defaultJointAngles_) * robotCfg_.obsScales.dofPos, // 10 
+        jointVel * robotCfg_.obsScales.dofVel,    // 10
         lastActions,                    // 10
         command,                        // 3
         gaitFrequency,                  // 1
@@ -258,7 +258,7 @@ void CustomAcController::computeObservation() {
                     [obsMin, obsMax](scalar_t x) { return std::max(obsMin, std::min(obsMax, x)); });
 }
 
-void CustomAcController::handleWalkMode() {
+void CustomAcController::handleStandMode() {
     if (loopCount_ % robotCfg_.controlCfg.decimation == 0) {
         computeObservation();
         computeActions();
