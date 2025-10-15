@@ -56,7 +56,7 @@ LeggedRobotCfg:
 
   size:
     actions_size: 10
-    observations_size: 46
+    observations_size: 49
     num_hist: 66
 
   mode:

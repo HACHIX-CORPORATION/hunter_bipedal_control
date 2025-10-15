@@ -19,8 +19,6 @@ bool RLControllerBase::init(hardware_interface::RobotHW *robotHw, ros::NodeHandl
 	CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
 	eeKinematicsPtr_ = std::make_shared<PinocchioEndEffectorKinematics>(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
 	leggedInterface_->modelSettings().contactNames3DoF); 
-	rbdConversions_ = std::make_shared<CentroidalModelRbdConversions>(leggedInterface_->getPinocchioInterface(),
-	leggedInterface_->getCentroidalModelInfo()); 
 
 	if (!loadModel(controllerNH)) {
 		ROS_ERROR_STREAM("[RLControllerBase] Failed to load the model. Ensure the path is correct and accessible.");
@@ -61,8 +59,6 @@ bool RLControllerBase::init(hardware_interface::RobotHW *robotHw, ros::NodeHandl
 		hybridJointHandles_.push_back(hybridJointInterface->getHandle(jointName)); 
 		jointNamesStr += "\n"+ jointName;
 	}
-	ROS_INFO_STREAM("[RLControllerBase] Joint names: " << jointNamesStr);
-;
 	imuSensorHandles_ = robotHw->get<hardware_interface::ImuSensorInterface>()->getHandle("base_imu");
 
 	// Register callbacks
@@ -155,7 +151,8 @@ void RLControllerBase::updateStateEstimation(const ros::Time &time, const ros::D
 	int generalizedCoordinatesNum = actuatedDofNum_ + 6;
 	vector_t jointPos(hybridJointHandles_.size()), jointVel(hybridJointHandles_.size());
 	Eigen::Quaternion<scalar_t> quat;
-	vector3_t angularVel;
+	vector3_t angularVel, linearAccel;
+	matrix3_t orientationCovariance, angularVelCovariance, linearAccelCovariance;
 
 	for (size_t i = 0; i < hybridJointHandles_.size(); ++i) {
 		jointPos(i) = hybridJointHandles_[i].getPosition();
@@ -170,10 +167,17 @@ void RLControllerBase::updateStateEstimation(const ros::Time &time, const ros::D
 		angularVel(i) = imuSensorHandles_.getAngularVelocity()[i];
 		linearAccel(i) = imuSensorHandles_.getLinearAcceleration()[i];
 	}
-	
+
+	for (size_t i = 0; i < 9; ++i) {
+		orientationCovariance(i) = imuSensorHandles_.getOrientationCovariance()[i];
+		angularVelCovariance(i) = imuSensorHandles_.getAngularVelocityCovariance()[i];
+		linearAccelCovariance(i) = imuSensorHandles_.getLinearAccelerationCovariance()[i];
+	}
+
     rbdState_.segment(0, 3) = quatToZyx(quat);
 	rbdState_.segment(3, 3) = vector3_t::Zero(); // TODO: estimate base position
 	rbdState_.segment(6, actuatedDofNum_) = jointPos;
+	rbdState_.segment(generalizedCoordinatesNum, 3) = linearAccel; // TODO: estimate base linear velocity
 
 	rbdState_.segment(generalizedCoordinatesNum + 3, 3) = angularVel;
 	rbdState_.segment(generalizedCoordinatesNum + 6, actuatedDofNum_) = jointVel;

@@ -224,10 +224,11 @@ void CustomAcController::computeObservation() {
     vector3_t zyx = rbdState_.segment(0, 3);
     matrix_t rot = getRotationMatrixFromZyxEulerAngles(zyx);
     vector3_t IMUzaxis(rot * vector3_t(0, 0, 1));
+    matrix_t inverseRot = getRotationMatrixFromZyxEulerAngles(zyx).inverse();
 
     vector3_t baseLinVel = inverseRot * rbdState_.segment(generalizedCoordinatesNum, 3);
     vector3_t baseAngVel = rbdState_.segment(generalizedCoordinatesNum + 3, 3);
-
+    std::cout << "baseLinVel x: " << baseLinVel << std::endl;
     vector3_t command(command_.x, command_.y, command_.yaw);
 
     vector_t jointPos = rbdState_.segment(6, actuatedDofNum_);

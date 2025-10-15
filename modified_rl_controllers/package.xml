@@ -14,6 +14,9 @@
     <depend>legged_common</depend>
     <depend>libeigen3-dev</depend>
     <depend>angles</depend>
+    <depend>legged_estimation</depend>
+    <depend>legged_interface</depend>
+    <depend>ocs2_self_collision_visualization</depend>
     
     <depend>controller_interface</depend>
     <exec_depend>controller_manager</exec_depend>

@@ -8,6 +8,8 @@ find_package(catkin REQUIRED
         COMPONENTS
         roscpp
         legged_common
+        legged_estimation
+        legged_interface
         dynamic_reconfigure
         controller_interface
         angles
@@ -26,6 +28,7 @@ set_target_properties(onnxruntime PROPERTIES
 )
 find_package(PkgConfig REQUIRED)
 find_package(Eigen3 REQUIRED)
+pkg_check_modules(pinocchio REQUIRED pinocchio)
 
 generate_dynamic_reconfigure_options(  
         cfg/Tutorials.cfg
@@ -39,6 +42,8 @@ catkin_package(
         CATKIN_DEPENDS
         roscpp
         legged_common
+        legged_estimation
+        legged_interface
         dynamic_reconfigure
         controller_interface
         angles
@@ -55,7 +60,10 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
         ${EIGEN3_INCLUDE_DIRS}
         ${onnxruntime_INCLUDE_DIRS}
+        ${pinocchio_INCLUDE_DIRS}
 )
+
+link_directories(${pinocchio_LIBRARY_DIRS})
 
 add_library(${PROJECT_NAME}
         src/CustomAcController.cpp
@@ -64,6 +72,7 @@ add_library(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
         ${catkin_LIBRARIES}
+        ${pinocchio_LIBRARIES}
         onnxruntime
         )
 
