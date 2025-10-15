@@ -8,6 +8,11 @@
     <param name="debug" value="false"/>
     <param name="urdfFile"          value="$(find legged_pdd_description)/urdf/pdd.urdf"/>
     <arg name="urdfFile" default="$(find legged_pdd_description)/urdf/pdd.urdf"/>
+    <param name="taskFile"          value="$(find modified_rl_controllers)/config/hunter/task.info"/>
+    <param name="referenceFile"          value="$(find modified_rl_controllers)/config/hunter/reference.info"/>
+    <param name="gaitCommandFile" value="$(find modified_rl_controllers)/config/hunter/gait.info"/>
+    <arg name="description_name"   default="legged_robot_description"/>
+
     <arg name="record_data" default="false"/>
 
     <group if="$(eval robot_type=='pdd')">

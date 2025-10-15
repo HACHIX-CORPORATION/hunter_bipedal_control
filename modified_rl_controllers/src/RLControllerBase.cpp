@@ -5,6 +5,23 @@
 namespace legged {
 
 bool RLControllerBase::init(hardware_interface::RobotHW *robotHw, ros::NodeHandle &controllerNH) {
+	std::string taskFile;
+	std::string urdfFile;
+	std::string referenceFile;
+	controllerNH.getParam("/urdfFile", urdfFile);
+	controllerNH.getParam("/taskFile", taskFile);
+	controllerNH.getParam("/referenceFile", referenceFile);	
+
+	bool verbose = false;
+
+	loadData::loadCppDataType(taskFile, "legged_robot_interface.verbose", verbose);
+	setupLeggedInterface(taskFile, urdfFile, referenceFile, verbose);
+	CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
+	eeKinematicsPtr_ = std::make_shared<PinocchioEndEffectorKinematics>(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
+	leggedInterface_->modelSettings().contactNames3DoF); 
+	rbdConversions_ = std::make_shared<CentroidalModelRbdConversions>(leggedInterface_->getPinocchioInterface(),
+	leggedInterface_->getCentroidalModelInfo()); 
+
 	if (!loadModel(controllerNH)) {
 		ROS_ERROR_STREAM("[RLControllerBase] Failed to load the model. Ensure the path is correct and accessible.");
 		return false;
@@ -70,6 +87,19 @@ void RLControllerBase::starting(const ros::Time &time) {
 	loopCount_ = 0;
 }
 
+void RLControllerBase::setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
+	bool verbose) {
+		leggedInterface_ = std::make_shared<LeggedInterface>(taskFile, urdfFile, referenceFile);
+		leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
+}
+
+void RLControllerBase::setupStateEstimate(const std::string& taskFile, bool verbose) {
+	stateEstimate_ = std::make_shared<KalmanFilterEstimate>(leggedInterface_->getPinocchioInterface(),
+	leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_);
+
+	dynamic_cast<KalmanFilterEstimate&>(*stateEstimate_).loadSettings(taskFile, verbose);
+}
+
 void RLControllerBase::update(const ros::Time &time, const ros::Duration &period) {
 	updateStateEstimation(time, period);
 
@@ -133,20 +163,24 @@ void RLControllerBase::updateStateEstimation(const ros::Time &time, const ros::D
 	}
 
 	for (size_t i = 0; i < 4; ++i) {
-	quat.coeffs()(i) = imuSensorHandles_.getOrientation()[i];
+		quat.coeffs()(i) = imuSensorHandles_.getOrientation()[i];
 	}
 
 	for (size_t i = 0; i < 3; ++i) {
 		angularVel(i) = imuSensorHandles_.getAngularVelocity()[i];
+		linearAccel(i) = imuSensorHandles_.getLinearAcceleration()[i];
 	}
 	
     rbdState_.segment(0, 3) = quatToZyx(quat);
 	rbdState_.segment(3, 3) = vector3_t::Zero(); // TODO: estimate base position
 	rbdState_.segment(6, actuatedDofNum_) = jointPos;
 
-	rbdState_.segment(generalizedCoordinatesNum, 3) = vector3_t::Zero(); // TODO: estimate base linear velocity
 	rbdState_.segment(generalizedCoordinatesNum + 3, 3) = angularVel;
 	rbdState_.segment(generalizedCoordinatesNum + 6, actuatedDofNum_) = jointVel;
+	stateEstimate_->updateJointStates(jointPos, jointVel);
+	stateEstimate_->updateImu(quat, angularVel, linearAccel, orientationCovariance, angularVelCovariance, linearAccelCovariance);
+	estimatedRbdState_ = stateEstimate_->update(time, period);
+	rbdState_.segment(generalizedCoordinatesNum, 3) = estimatedRbdState_.segment<3>(generalizedCoordinatesNum + 3);
 }
 
 void RLControllerBase::cmdVelCallback(const geometry_msgs::Twist &msg) {

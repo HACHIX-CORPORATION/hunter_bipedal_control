@@ -225,6 +225,7 @@ void CustomAcController::computeObservation() {
     matrix_t rot = getRotationMatrixFromZyxEulerAngles(zyx);
     vector3_t IMUzaxis(rot * vector3_t(0, 0, 1));
 
+    vector3_t baseLinVel = inverseRot * rbdState_.segment(generalizedCoordinatesNum, 3);
     vector3_t baseAngVel = rbdState_.segment(generalizedCoordinatesNum + 3, 3);
 
     vector3_t command(command_.x, command_.y, command_.yaw);
@@ -255,8 +256,10 @@ void CustomAcController::computeObservation() {
     // get observation
     vector_t obs(observationSize_); // 43
 
-    obs << baseAngVel,                  // 3
-        IMUzaxis,                       // 3
+    obs << 
+        baseLinVel,                    // 3
+        baseAngVel,                    // 3
+        IMUzaxis,                      // 3
         (jointPos - defaultJointAngles_) * robotCfg_.obsScales.dofPos, // 10 
         jointVel * robotCfg_.obsScales.dofVel,    // 10
         lastActions,                    // 10

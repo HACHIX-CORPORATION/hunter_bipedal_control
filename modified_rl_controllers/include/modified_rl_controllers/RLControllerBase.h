@@ -8,6 +8,13 @@
 #include <hardware_interface/imu_sensor_interface.h>
 #include <legged_common/hardware_interface/ContactSensorInterface.h>
 #include <legged_common/hardware_interface/HybridJointInterface.h>
+#include <legged_estimation/LinearKalmanFilter.h>
+#include <legged_estimation/StateEstimateBase.h>
+#include <legged_interface/LeggedInterface.h>
+
+#include <ocs2_centroidal_model/CentroidalModelRbdConversions.h>
+#include <ocs2_mpc/SystemObservation.h>
+#include <ocs2_robotic_tools/common/RotationTransforms.h>
 
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/Float32.h>
@@ -30,6 +37,8 @@
 
 namespace legged
 {
+  using namespace ocs2;
+  using namespace legged_robot; 
   struct RLRobotCfg
   {
     struct ControlCfg
@@ -140,6 +149,9 @@ namespace legged
 
     virtual void cmdVelCallback(const geometry_msgs::Twist &msg);
     virtual void joyInfoCallback(const sensor_msgs::Joy &msg);
+    virtual void setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
+                                      bool verbose);
+    virtual void setupStateEstimate(const std::string& taskFile, bool verbose);
 
     Mode mode_;
     int64_t loopCount_;
@@ -147,6 +159,10 @@ namespace legged
     // Command est_cmd_;
     // Command filted_cmd_;
     RLRobotCfg robotCfg_{};
+
+    std::shared_ptr<StateEstimateBase> stateEstimate_;
+    std::shared_ptr<LeggedInterface> leggedInterface_;
+    std::shared_ptr<PinocchioEndEffectorKinematics> eeKinematicsPtr_;
 
     JoyInfo joyInfo;
     // std::atomic_bool emergency_stop{false};
@@ -157,6 +173,7 @@ namespace legged
 
     
     vector_t rbdState_;
+    vector_t estimatedRbdState_;
     // vector_t measuredRbdState_;
     // Proprioception propri_;
 
