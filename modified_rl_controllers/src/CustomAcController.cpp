@@ -18,6 +18,11 @@ bool CustomAcController::loadModel(ros::NodeHandle &nh) {
         ROS_ERROR_STREAM("Get policy path fail from param server, some error occur!");
         return false;
       }
+    
+    if (!nh.getParam("/debug", debug_)) {
+        ROS_ERROR_STREAM("Get debug flag fail from param server, set to false!");
+        debug_ = false;
+      }
 
     policyFilePath_ = policyFilePath;
     ROS_INFO_STREAM("Load Onnx model from path : " << policyFilePath);
@@ -119,6 +124,9 @@ bool CustomAcController::loadRLCfg(ros::NodeHandle &nh) {
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/size/observations_size", observationSize_));
     actions_.resize(actionsSize_);
     observations_.resize(observationSize_);
+    phase_.resize(2);
+
+    phase_ << 0.0, M_PI;
 
     command_.x = 0.0;
     command_.y = 0.0;
@@ -146,49 +154,51 @@ bool CustomAcController::loadRLCfg(ros::NodeHandle &nh) {
 
     ROS_INFO_STREAM("Default joint angles: " << defaultJointAngles_.transpose());
     
-    // Initialize CSV logging
-    auto t = std::time(nullptr);
-    auto tm = *std::localtime(&t);
-    std::ostringstream oss;
+    if (debug_){
+        // Initialize CSV logging
+        auto t = std::time(nullptr);
+        auto tm = *std::localtime(&t);
+        std::ostringstream oss;
 
-    oss << logDir_ << std::put_time(&tm, "%Y%m%d_%H%M%S");
-    std::string timestampedFolder = oss.str();
-    
-    mkdir(timestampedFolder.c_str(), 0755);
-    ROS_INFO_STREAM("Created log folder: " << timestampedFolder);
+        oss << logDir_ << std::put_time(&tm, "%Y%m%d_%H%M%S");
+        std::string timestampedFolder = oss.str();
+        
+        mkdir(timestampedFolder.c_str(), 0755);
+        ROS_INFO_STREAM("Created log folder: " << timestampedFolder);
 
-    // Initialize observation CSV file
-    std::string observationCsvFilePath_ = timestampedFolder + "/observation_data.csv";
-    observationCsvFile_.open(observationCsvFilePath_, std::ios::out);
-    if (observationCsvFile_.is_open()) {
-        observationCsvFile_ << "loop_count,";
-        observationCsvFile_ << "baseAngVel_x,baseAngVel_y,baseAngVel_z,";
-        observationCsvFile_ << "IMUzaxis_x,IMUzaxis_y,IMUzaxis_z,";
-        observationCsvFile_ << "deltaJointPos_0,deltaJointPos_1,deltaJointPos_2,deltaJointPos_3,deltaJointPos_4,deltaJointPos_5,deltaJointPos_6,deltaJointPos_7,deltaJointPos_8,deltaJointPos_9,";
-        observationCsvFile_ << "jointVel_0,jointVel_1,jointVel_2,jointVel_3,jointVel_4,jointVel_5,jointVel_6,jointVel_7,jointVel_8,jointVel_9,";
-        observationCsvFile_ << "lastActions_0,lastActions_1,lastActions_2,lastActions_3,lastActions_4,lastActions_5,lastActions_6,lastActions_7,lastActions_8,lastActions_9,";
-        observationCsvFile_ << "command_x,command_y,command_yaw,";
-        observationCsvFile_ << "gaitFrequency,gait";
-        observationCsvFile_ << std::endl;
-        ROS_INFO_STREAM("Observation CSV file opened for logging: " << observationCsvFilePath_);
-    } else {
-        ROS_ERROR_STREAM("Failed to open observation CSV file for logging: " << observationCsvFilePath_);
-    }
-    
-    // Initialize action CSV file
-    std::string actionCsvFilePath_ = timestampedFolder + "/action_data.csv";
-    actionCsvFile_.open(actionCsvFilePath_, std::ios::out);
-    if (actionCsvFile_.is_open()) {
-        actionCsvFile_ << "loop_count";
-        for (int i = 0; i < actions_.size(); i++) {
-            actionCsvFile_ << "," << "action_" << i;
+        // Initialize observation CSV file
+        std::string observationCsvFilePath_ = timestampedFolder + "/observation_data.csv";
+        observationCsvFile_.open(observationCsvFilePath_, std::ios::out);
+        if (observationCsvFile_.is_open()) {
+            observationCsvFile_ << "loop_count,";
+            observationCsvFile_ << "baseAngVel_x,baseAngVel_y,baseAngVel_z,";
+            observationCsvFile_ << "IMUzaxis_x,IMUzaxis_y,IMUzaxis_z,";
+            observationCsvFile_ << "deltaJointPos_0,deltaJointPos_1,deltaJointPos_2,deltaJointPos_3,deltaJointPos_4,deltaJointPos_5,deltaJointPos_6,deltaJointPos_7,deltaJointPos_8,deltaJointPos_9,";
+            observationCsvFile_ << "jointVel_0,jointVel_1,jointVel_2,jointVel_3,jointVel_4,jointVel_5,jointVel_6,jointVel_7,jointVel_8,jointVel_9,";
+            observationCsvFile_ << "lastActions_0,lastActions_1,lastActions_2,lastActions_3,lastActions_4,lastActions_5,lastActions_6,lastActions_7,lastActions_8,lastActions_9,";
+            observationCsvFile_ << "command_x,command_y,command_yaw,";
+            observationCsvFile_ << "gaitFrequency,gait";
+            observationCsvFile_ << std::endl;
+            ROS_INFO_STREAM("Observation CSV file opened for logging: " << observationCsvFilePath_);
+        } else {
+            ROS_ERROR_STREAM("Failed to open observation CSV file for logging: " << observationCsvFilePath_);
         }
-        actionCsvFile_ << std::endl;
-        ROS_INFO_STREAM("Action CSV file opened for logging: " << actionCsvFilePath_);
-    } else {
-        ROS_ERROR_STREAM("Failed to open action CSV file for logging: " << actionCsvFilePath_);
+        
+        // Initialize action CSV file
+        std::string actionCsvFilePath_ = timestampedFolder + "/action_data.csv";
+        actionCsvFile_.open(actionCsvFilePath_, std::ios::out);
+        if (actionCsvFile_.is_open()) {
+            actionCsvFile_ << "loop_count";
+            for (int i = 0; i < actions_.size(); i++) {
+                actionCsvFile_ << "," << "action_" << i;
+            }
+            actionCsvFile_ << std::endl;
+            ROS_INFO_STREAM("Action CSV file opened for logging: " << actionCsvFilePath_);
+        } else {
+            ROS_ERROR_STREAM("Failed to open action CSV file for logging: " << actionCsvFilePath_);
+        }
     }
-    
+
     return (error == 0);
 }
 
@@ -226,15 +236,24 @@ void CustomAcController::computeObservation() {
     vector_t lastActions(lastActions_);
 
     // Note: This values are hardcoded for walking mode
-    scalar_t gaitFrequency = 0.279;
     scalar_t gait = 1.0;
+    scalar_t gait_frequency = 1.75;
+    scalar_t foot_height = 0.16;
+    scalar_t phase_dt = 2 * M_PI * gait_frequency * (0.002 * robotCfg_.controlCfg.decimation);
+
+    for (int i = 0; i < phase_.size(); ++i) {
+        phase_[i] = std::fmod(phase_[i] + phase_dt + M_PI, 2 * M_PI) - M_PI;
+    }
+    
+    vector_t observed_phase(4);
+    observed_phase << cos(phase_[0]), cos(phase_[1]), sin(phase_[0]), sin(phase_[1]);
 
     // normalize data
     // RLRobotCfg::ObsScales& obsScales = robotCfg_.obsScales;
     // matrix_t commandScaler = Eigen::DiagonalMatrix<scalar_t, 3>(obsScales.linVel, obsScales.linVel, obsScales.angVel);
     
     // get observation
-    vector_t obs(observationSize_); // 41
+    vector_t obs(observationSize_); // 43
 
     obs << baseAngVel,                  // 3
         IMUzaxis,                       // 3
@@ -242,8 +261,10 @@ void CustomAcController::computeObservation() {
         jointVel * robotCfg_.obsScales.dofVel,    // 10
         lastActions,                    // 10
         command,                        // 3
-        gaitFrequency,                  // 1
-        gait                           // 1
+        observed_phase,                 // 4
+        gait,                           // 1
+        gait_frequency,                 // 1
+        foot_height                     // 1
         ;
 
     // clip observation
@@ -268,22 +289,24 @@ void CustomAcController::handleStandMode() {
         std::transform(actions_.begin(), actions_.end(), actions_.begin(),
         [actionMin, actionMax](scalar_t x) { return std::max(actionMin, std::min(actionMax, x)); });
 
-        // Log observation data to CSV
-        if (observationCsvFile_.is_open()) {
-            observationCsvFile_ << loopCount_;
-            for (int i = 0; i < observations_.size(); i++) {
-                observationCsvFile_ << "," << observations_[i];
+        if (debug_) {
+            // Log observation data to CSV
+            if (observationCsvFile_.is_open()) {
+                observationCsvFile_ << loopCount_;
+                for (int i = 0; i < observations_.size(); i++) {
+                    observationCsvFile_ << "," << observations_[i];
+                }
+                observationCsvFile_ << std::endl;
             }
-            observationCsvFile_ << std::endl;
-        }
 
-        //log action data to CSV
-        if (actionCsvFile_.is_open()) {
-            actionCsvFile_ << loopCount_;
-            for (int i = 0; i < actions_.size(); i++) {
-                actionCsvFile_ << "," << actions_[i];
+            //log action data to CSV
+            if (actionCsvFile_.is_open()) {
+                actionCsvFile_ << loopCount_;
+                for (int i = 0; i < actions_.size(); i++) {
+                    actionCsvFile_ << "," << actions_[i];
+                }
+                actionCsvFile_ << std::endl;
             }
-            actionCsvFile_ << std::endl;
         }
     }
 

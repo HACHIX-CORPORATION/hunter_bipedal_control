@@ -5,6 +5,7 @@
     <arg name="rviz" default="true"/>
 
      <!-- make the files into global parameters -->
+    <param name="debug" value="false"/>
     <param name="urdfFile"          value="$(find legged_pdd_description)/urdf/pdd.urdf"/>
     <arg name="urdfFile" default="$(find legged_pdd_description)/urdf/pdd.urdf"/>
     <arg name="record_data" default="false"/>

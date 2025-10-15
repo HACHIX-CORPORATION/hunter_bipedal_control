@@ -6,7 +6,9 @@
     <include file="$(find modified_rl_controllers)/launch/joy_teleop.launch"/>
     
     <rosparam file="$(find modified_rl_controllers)/config/$(env ROBOT_TYPE)_kd.yaml" command="load"/>
-    <param name="policyFile" value="$(find modified_rl_controllers)/policy/$(env ROBOT_TYPE)/stand_202510031605_best.onnx"/>
+    <!-- <param name="policyFile" value="$(find modified_rl_controllers)/policy/$(env ROBOT_TYPE)/stand_202510031605_best.onnx"/> -->
+    <param name="policyFile" value="$(find modified_rl_controllers)/policy/$(env ROBOT_TYPE)/stand_202510131635.onnx"/>
+
     <rosparam file="$(find modified_rl_controllers)/config/controllers.yaml" command="load"/>
     <rosparam file="$(find modified_rl_controllers)/config/$(env ROBOT_TYPE)_amp.yaml" command="load"/>
 

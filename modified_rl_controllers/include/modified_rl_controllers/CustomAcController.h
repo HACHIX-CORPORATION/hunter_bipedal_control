@@ -81,6 +81,7 @@ namespace legged
     // vector3_t basePosition_;
     vector_t lastActions_;
     vector_t defaultJointAngles_;
+    vector_t phase_;
 
     // bool isfirstRecObs_{true};
     int actionsSize_;
@@ -99,6 +100,7 @@ namespace legged
     // vector_t filted_action_;
 
     // CSV logging
+    bool debug_ = false;
     std::ofstream observationCsvFile_;
     std::ofstream actionCsvFile_;
     std::string logDir_ = "/home/encos/Desktop/hunter_bipedal_control/src/hunter_bipedal_control/modified_rl_controllers/logs/";
