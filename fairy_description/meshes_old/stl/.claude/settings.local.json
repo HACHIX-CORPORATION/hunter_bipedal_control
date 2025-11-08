@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod:*)",
+      "Bash(python3:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(for stl_file in *.STL)",
+      "Bash(do python smaller.py \"$stl_file\")",
+      "Bash(done)"
+    ],
+    "deny": []
+  }
+}

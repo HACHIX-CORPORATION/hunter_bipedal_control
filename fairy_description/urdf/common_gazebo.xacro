@@ -1,0 +1,61 @@
+<robot name="fairy" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- gazebo_ros_control -->
+  <xacro:macro name="gazebo_ros_control">
+
+    <gazebo>
+      <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+        <robotNamespace>/fairy</robotNamespace>
+      </plugin>
+    </gazebo>
+
+  </xacro:macro>
+
+  <xacro:macro name="transmission" params="joint">
+
+    <transmission name="${joint}_transmission">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${joint}">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${joint}_actuator">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+
+  </xacro:macro>
+
+
+  <!-- mimic -->
+  <xacro:macro name="mimic" params="joint mimic_joint">
+
+    <gazebo>
+      <plugin filename="libroboticsgroup_upatras_gazebo_mimic_joint_plugin.so" name="mimic_${mimic_joint}">
+        <joint>${joint}</joint>
+        <mimicJoint>${mimic_joint}</mimicJoint>
+        <multiplier>1</multiplier>
+        <offset>0.0</offset>
+        <maxEffort>1000.0</maxEffort>
+      </plugin>
+    </gazebo>
+
+  </xacro:macro>
+
+
+  <!-- mimic -->
+  <xacro:macro name="planar_move">
+
+    <gazebo>
+      <plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
+        <commandTopic>cmd_vel</commandTopic>
+        <odometryTopic>odom</odometryTopic>
+        <odometryFrame>odom</odometryFrame>
+        <odometryRate>20.0</odometryRate>
+        <robotBaseFrame>base_link</robotBaseFrame>
+        <cmdTimeout>-1</cmdTimeout>
+      </plugin>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>

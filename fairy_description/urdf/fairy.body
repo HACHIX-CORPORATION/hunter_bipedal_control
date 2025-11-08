@@ -1,0 +1,353 @@
+format: ChoreonoidBody
+format_version: 2.0
+angle_unit: degree
+name: "fairy"
+root_link: "base_link"
+links:
+  -
+    name: "base_link"
+    joint_name: "base_link"
+    joint_type: free
+    mass: 1
+    center_of_mass: [ 0, 0, 0 ]
+    inertia: [
+      1, 0, 0,
+      0, 1, 0,
+      0, 0, 1 ]
+  -
+    name: "body_link"
+    parent: "base_link"
+    joint_name: "base_to_body"
+    joint_type: fixed
+    mass: 12.7235
+    center_of_mass: [ -0, 0, -0.00474 ]
+    inertia: [
+      0.1, 0, 0,
+      0, 0.1, 0,
+      0, 0, 0.1 ]
+    elements:
+      -
+        type: Shape
+        geometry:
+          type: Resource
+          uri: "package://fairy_description/meshes/BASE.STL"
+  -
+    name: "L_FOOT"
+    parent: "body_link"
+    translation: [ 0, 0.08, 0 ]
+    joint_name: "base_to_left_forward_base"
+    joint_type: fixed
+    mass: 0.001
+    center_of_mass: [ 0, 0, 0 ]
+    inertia: [
+      0, 0, 0,
+      0, 0, 0,
+      0, 0, 0 ]
+  -
+    name: "L1"
+    parent: "L_FOOT"
+    joint_name: "L_CROTCH_R"
+    joint_type: revolute
+    joint_axis: [ 1, 0, 0 ]
+    joint_id: 0
+    joint_range: [ -120, 120 ]
+    max_joint_velocity: 120
+    max_joint_effort: 1000
+    mass: 1.23047
+    center_of_mass: [ -0, -0, 0 ]
+    inertia: [
+      0.1, 0, 0,
+      0, 0.1, 0,
+      0, 0, 0.1 ]
+    elements:
+      -
+        type: Visual
+        elements:
+          - &A0
+            type: Shape
+            geometry:
+              type: Resource
+              uri: "package://fairy_description/meshes/LHIP.STL"
+      -
+        type: Collision
+        elements:
+          -
+            type: Transform
+            scale: [ 0.002, 0.002, 0.002 ]
+            elements:
+              - *A0
+  -
+    name: "L2"
+    parent: "L1"
+    translation: [ 0, 0.065, 0 ]
+    joint_name: "L_CROTCH_P"
+    joint_type: revolute
+    joint_axis: [ 0, 1, 0 ]
+    joint_id: 1
+    joint_range: [ -170, 30 ]
+    max_joint_velocity: 120
+    max_joint_effort: 1000
+    mass: 2.06632
+    center_of_mass: [ 6e-05, -0, -0.05962 ]
+    inertia: [
+      0.1, 0, 0,
+      0, 0.1, 0,
+      0, 0, 0.1 ]
+    elements:
+      -
+        type: Shape
+        geometry:
+          type: Resource
+          uri: "package://fairy_description/meshes/LULEG.STL"
+  -
+    name: "L3"
+    parent: "L2"
+    translation: [ 0, 0, -0.26 ]
+    joint_name: "L_KNEE_P"
+    joint_type: revolute
+    joint_axis: [ 0, 1, 0 ]
+    joint_id: 2
+    joint_range: [ -120, 180 ]
+    max_joint_velocity: 120
+    max_joint_effort: 1000
+    mass: 0.41492
+    center_of_mass: [ 0, -0, -0.19822 ]
+    inertia: [
+      0.1, 0, 0,
+      0, 0.1, 0,
+      0, 0, 0.1 ]
+    elements:
+      -
+        type: Shape
+        geometry:
+          type: Resource
+          uri: "package://fairy_description/meshes/LLLEG.STL"
+  -
+    name: "L4"
+    parent: "L3"
+    translation: [ 0, 0, -0.30056 ]
+    joint_name: "L_TOE_P"
+    joint_type: revolute
+    joint_axis: [ 0, 1, 0 ]
+    joint_id: 3
+    joint_range: [ -120, 120 ]
+    max_joint_velocity: 120
+    max_joint_effort: 1000
+    mass: 0.001
+    center_of_mass: [ 0, -0, -0.04246 ]
+    inertia: [
+      0.1, 0, 0,
+      0, 0.1, 0,
+      0, 0, 0.1 ]
+    elements:
+      -
+        type: Shape
+        geometry:
+          type: Resource
+          uri: "package://fairy_description/meshes/LTOE.STL"
+  -
+    name: "L_TIP"
+    parent: "L4"
+    translation: [ 0, 0, -0.035 ]
+    joint_name: "L_TIP"
+    joint_type: fixed
+    mass: 0.001
+    center_of_mass: [ 0, 0, 0 ]
+    inertia: [
+      0.0001, 0.0001, 0.0001,
+      0.0001, 0.0001, 0.0001,
+      0.0001, 0.0001, 0.0001 ]
+    elements:
+      -
+        type: Visual
+        elements:
+          -
+            type: Transform
+            translation: [ 0.02, -0.01, 0 ]
+            elements:
+              -
+                type: Shape
+                appearance:
+                  material:
+                    diffuse: [ 1, 0, 0 ]
+                geometry:
+                  type: Box
+                  size: [ 0.06, 0.05, 0.001 ]
+      -
+        type: Collision
+        elements:
+          -
+            type: Shape
+            geometry:
+              type: Box
+              size: [ 0.06, 0.05, 0.001 ]
+  -
+    name: "R_FOOT"
+    parent: "body_link"
+    translation: [ 0, -0.08, 0 ]
+    joint_name: "base_to_right_forward_base"
+    joint_type: fixed
+    mass: 0.001
+    center_of_mass: [ 0, 0, 0 ]
+    inertia: [
+      0, 0, 0,
+      0, 0, 0,
+      0, 0, 0 ]
+  -
+    name: "R1"
+    parent: "R_FOOT"
+    joint_name: "R_CROTCH_R"
+    joint_type: revolute
+    joint_axis: [ 1, 0, 0 ]
+    joint_id: 4
+    joint_range: [ -120, 120 ]
+    max_joint_velocity: 120
+    max_joint_effort: 1000
+    mass: 1.23047
+    center_of_mass: [ -0, -0, 0 ]
+    inertia: [
+      0.1, 0, 0,
+      0, 0.1, 0,
+      0, 0, 0.1 ]
+    elements:
+      -
+        type: Visual
+        elements:
+          - &A1
+            type: Shape
+            geometry:
+              type: Resource
+              uri: "package://fairy_description/meshes/RHIP.STL"
+      -
+        type: Collision
+        elements:
+          -
+            type: Transform
+            scale: [ 0.002, 0.002, 0.002 ]
+            elements:
+              - *A1
+  -
+    name: "R2"
+    parent: "R1"
+    translation: [ 0, -0.065, 0 ]
+    joint_name: "R_CROTCH_P"
+    joint_type: revolute
+    joint_axis: [ 0, 1, 0 ]
+    joint_id: 5
+    joint_range: [ -170, 30 ]
+    max_joint_velocity: 120
+    max_joint_effort: 1000
+    mass: 2.06632
+    center_of_mass: [ 6e-05, -0, -0.05962 ]
+    inertia: [
+      0.1, 0, 0,
+      0, 0.1, 0,
+      0, 0, 0.1 ]
+    elements:
+      -
+        type: Shape
+        geometry:
+          type: Resource
+          uri: "package://fairy_description/meshes/RULEG.STL"
+  -
+    name: "R3"
+    parent: "R2"
+    translation: [ 0, 0, -0.26 ]
+    joint_name: "R_KNEE_P"
+    joint_type: revolute
+    joint_axis: [ 0, 1, 0 ]
+    joint_id: 6
+    joint_range: [ -120, 180 ]
+    max_joint_velocity: 120
+    max_joint_effort: 1000
+    mass: 0.41492
+    center_of_mass: [ 0, -0, -0.19822 ]
+    inertia: [
+      0.1, 0, 0,
+      0, 0.1, 0,
+      0, 0, 0.1 ]
+    elements:
+      -
+        type: Shape
+        geometry:
+          type: Resource
+          uri: "package://fairy_description/meshes/RLLEG.STL"
+  -
+    name: "R4"
+    parent: "R3"
+    translation: [ 0, 0, -0.30056 ]
+    joint_name: "R_TOE_P"
+    joint_type: revolute
+    joint_axis: [ 0, 1, 0 ]
+    joint_id: 7
+    joint_range: [ -120, 120 ]
+    max_joint_velocity: 120
+    max_joint_effort: 1000
+    mass: 0.001
+    center_of_mass: [ 0, -0, -0.04246 ]
+    inertia: [
+      0.1, 0, 0,
+      0, 0.1, 0,
+      0, 0, 0.1 ]
+    elements:
+      -
+        type: Shape
+        geometry:
+          type: Resource
+          uri: "package://fairy_description/meshes/RTOE.STL"
+  -
+    name: "R_TIP"
+    parent: "R4"
+    translation: [ 0, 0, -0.035 ]
+    joint_name: "R_TIP"
+    joint_type: fixed
+    mass: 0.001
+    center_of_mass: [ 0, 0, 0 ]
+    inertia: [
+      0.0001, 0.0001, 0.0001,
+      0.0001, 0.0001, 0.0001,
+      0.0001, 0.0001, 0.0001 ]
+    elements:
+      -
+        type: Visual
+        elements:
+          -
+            type: Transform
+            translation: [ 0.02, 0.01, 0 ]
+            elements:
+              -
+                type: Shape
+                appearance:
+                  material:
+                    diffuse: [ 1, 0, 0 ]
+                geometry:
+                  type: Box
+                  size: [ 0.06, 0.05, 0.001 ]
+      -
+        type: Collision
+        elements:
+          -
+            type: Shape
+            geometry:
+              type: Box
+              size: [ 0.06, 0.05, 0.001 ]
+  -
+    name: "imu_link"
+    parent: "base_link"
+    joint_name: "base_to_imu"
+    joint_type: fixed
+    mass: 0.001
+    center_of_mass: [ 0, 0, 0 ]
+    inertia: [
+      1e-06, 0, 0,
+      0, 1e-06, 0,
+      0, 0, 1e-06 ]
+    elements:
+      -
+        type: Visual
+        elements:
+          -
+            type: Shape
+            geometry:
+              type: Box
+              size: [ 0.05, 0.05, 0.05 ]

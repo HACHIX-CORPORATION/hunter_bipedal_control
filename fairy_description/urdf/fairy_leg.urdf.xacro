@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+<robot name="fairy" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- include files -->
+  <xacro:include filename="$(find fairy_description)/urdf/materials.xacro"/>
+  <xacro:include filename="$(find fairy_description)/urdf/fairy_macro.xacro"/>
+  <xacro:include filename="$(find fairy_description)/urdf/common_gazebo.xacro"/>
+
+  <xacro:fairy/>
+  <xacro:gazebo_ros_control/>
+
+</robot>

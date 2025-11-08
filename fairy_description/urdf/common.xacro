@@ -1,0 +1,23 @@
+<robot name="fairy" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="link" params="name material mesh mass ixx ixy ixz iyy iyz izz">
+    <link name="${name}">
+      <visual>
+        <material name="${material}"/>
+        <geometry>
+          <mesh filename="package://fairy_description/meshes/${mesh}" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="package://fairy_description/meshes/${mesh}" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="${mass}"/>
+        <inertia ixx="${ixx}" ixy="${ixy}" ixz="${ixz}" iyy="${iyy}" iyz="${iyz}" izz="${izz}"/>
+      </inertial>
+    </link>
+  </xacro:macro>
+
+</robot>
