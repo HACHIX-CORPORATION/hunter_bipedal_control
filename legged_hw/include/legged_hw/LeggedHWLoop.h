@@ -48,7 +48,7 @@ at www.bridgedp.com.
 
 #include <chrono>
 #include <thread>
-
+#include <atomic> 
 #include <controller_manager/controller_manager.h>
 #include <ros/ros.h>
 
