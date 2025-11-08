@@ -40,10 +40,16 @@ add_executable(legged_bridge_hw
         src/legged_bridge_hw.cpp
         src/BridgeHW.cpp)
 
+add_executable(test_transmit 
+        test/test_transmit.cpp)
+
 ## Specify libraries to link executable targets against
 target_link_libraries(legged_bridge_hw
         ${catkin_LIBRARIES}
         ) 
+target_link_libraries(test_transmit
+        ${catkin_LIBRARIES}
+        )
 
 # add
 add_subdirectory(app/thirdparty)
@@ -68,7 +74,7 @@ target_link_libraries(motor soem)
 
 # add_executable(master_stack_test main.cpp)
 target_link_libraries(legged_bridge_hw motor soem cpp-readline)
-
+target_link_libraries(test_transmit motor soem cpp-readline)
 
 #########################
 ###   CLANG TOOLING   ###
@@ -91,6 +97,12 @@ endif (cmake_clang_tools_FOUND)
 # Mark executables and/or libraries for installation
 
 install(TARGETS legged_bridge_hw
+        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+        )
+
+install(TARGETS test_transmit
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

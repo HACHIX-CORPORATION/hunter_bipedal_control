@@ -436,25 +436,25 @@ void EtherCAT_Send_Command(YKSMotorData* mot_data)
     if (index == 0)
     {
       slave = 0;
-      send_motor_ctrl_cmd(&Tx_Message[slave], 1, 1, mot_data[0].kp_, mot_data[0].kd_, mot_data[0].pos_des_,
+      send_motor_ctrl_cmd(&Tx_Message[slave], 4, 1, mot_data[0].kp_, mot_data[0].kd_, mot_data[0].pos_des_,
                           mot_data[0].vel_des_, mot_data[0].ff_);
     }
     else if (index == 1)
     {
       slave = 0;
-      send_motor_ctrl_cmd(&Tx_Message[slave], 2, 2, mot_data[1].kp_, mot_data[1].kd_, mot_data[1].pos_des_,
+      send_motor_ctrl_cmd(&Tx_Message[slave], 5, 2, mot_data[1].kp_, mot_data[1].kd_, mot_data[1].pos_des_,
                           mot_data[1].vel_des_, mot_data[1].ff_);
     }
     else if (index == 2)
     {
       slave = 0;
-      send_motor_ctrl_cmd(&Tx_Message[slave], 4, 3, mot_data[2].kp_, mot_data[2].kd_, mot_data[2].pos_des_,
+      send_motor_ctrl_cmd(&Tx_Message[slave], 1, 3, mot_data[2].kp_, mot_data[2].kd_, mot_data[2].pos_des_,
                           mot_data[2].vel_des_, mot_data[2].ff_);
     }
     else if (index == 3)
     {
       slave = 0;
-      send_motor_ctrl_cmd(&Tx_Message[slave], 5, 4, mot_data[3].kp_, mot_data[3].kd_, mot_data[3].pos_des_,
+      send_motor_ctrl_cmd(&Tx_Message[slave], 2, 4, mot_data[3].kp_, mot_data[3].kd_, mot_data[3].pos_des_,
                           mot_data[3].vel_des_, mot_data[3].ff_);
     }
     else if (index == 4)
@@ -466,25 +466,25 @@ void EtherCAT_Send_Command(YKSMotorData* mot_data)
     else if (index == 6)
     {
       slave = 1;
-      send_motor_ctrl_cmd(&Tx_Message[slave], 1, 1, mot_data[4].kp_, mot_data[4].kd_, mot_data[4].pos_des_,
+      send_motor_ctrl_cmd(&Tx_Message[slave], 4, 1, mot_data[4].kp_, mot_data[4].kd_, mot_data[4].pos_des_,
                           mot_data[4].vel_des_, mot_data[4].ff_);
     }
     else if (index == 7)
     {
       slave = 1;
-      send_motor_ctrl_cmd(&Tx_Message[slave], 2, 2, mot_data[5].kp_, mot_data[5].kd_, mot_data[5].pos_des_,
+      send_motor_ctrl_cmd(&Tx_Message[slave], 5, 2, mot_data[5].kp_, mot_data[5].kd_, mot_data[5].pos_des_,
                           mot_data[5].vel_des_, mot_data[5].ff_);
     }
     else if (index == 8)
     {
       slave = 1;
-      send_motor_ctrl_cmd(&Tx_Message[slave], 4, 3, mot_data[6].kp_, mot_data[6].kd_, mot_data[6].pos_des_,
+      send_motor_ctrl_cmd(&Tx_Message[slave], 1, 3, mot_data[6].kp_, mot_data[6].kd_, mot_data[6].pos_des_,
                           mot_data[6].vel_des_, mot_data[6].ff_);
     }
     else if (index == 9)
     {
       slave = 1;
-      send_motor_ctrl_cmd(&Tx_Message[slave], 5, 4, mot_data[7].kp_, mot_data[7].kd_, mot_data[7].pos_des_,
+      send_motor_ctrl_cmd(&Tx_Message[slave], 2, 4, mot_data[7].kp_, mot_data[7].kd_, mot_data[7].pos_des_,
                           mot_data[7].vel_des_, mot_data[7].ff_);
     }
     else if (index == 10)

@@ -48,6 +48,7 @@ int main(int argc, char* argv[])
     }
     std::cout << std::endl;
 
+    EtherCAT_Send_Command((YKSMotorData*)yksSendcmdzero_);
     usleep(2000); // 2ms
   }
 
