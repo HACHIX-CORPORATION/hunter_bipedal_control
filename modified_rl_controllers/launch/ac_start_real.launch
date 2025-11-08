@@ -4,12 +4,12 @@
     <arg name="rviz" default="true"/>
     <arg name="debug" default="false"/>
     <arg name="record_data" default="false"/>
-    <arg name="urdfFile" default="$(find fairy_description)/urdf/fairy.urdf.xacro"/>
+    <arg name="urdfXacroFile" default="$(find fairy_description)/urdf/fairy.urdf.xacro"/>
 
     <param name="debug" value="$(arg debug)"/>
-    <param name="robot_description" textfile="$(arg urdfFile)" />
+    <param name="robot_description" command="$(find xacro)/xacro $(arg urdfXacroFile)" />
 
-    <param name="urdfFile"          value="$(arg urdfFile)"/>
+    <param name="urdfFile"          command="$(find xacro)/xacro $(arg urdfXacroFile)"/>
     <param name="taskFile"          value="$(find modified_rl_controllers)/config/fairy/task.info"/>
     <param name="referenceFile"          value="$(find modified_rl_controllers)/config/fairy/reference.info"/>
     <param name="gaitCommandFile" value="$(find modified_rl_controllers)/config/fairy/gait.info"/>
@@ -25,7 +25,6 @@
     </node>
 
     <group if="$(arg rviz)">
-        <param name="robot_description" textfile="$(arg urdfFile)"/>
         <arg name="rvizconfig" default="$(find modified_rl_controllers)/rviz/legged_robot.rviz" />
         <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rvizconfig)" output="screen" />
       </group>
