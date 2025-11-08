@@ -1,0 +1,37 @@
+<launch>
+    <arg name="robot_type" default="fairy" doc="Robot type: [fairy]"/>
+    
+    <param name="legged_robot_description" command="$(find xacro)/xacro $(find fairy_description)/urdf/fairy.urdf.xacro"/>
+    <param name="robot_description" command="$(find xacro)/xacro $(find fairy_description)/urdf/fairy.urdf.xacro"/>
+
+    <node name="generate_urdf" pkg="legged_common" type="generate_urdf.sh" output="screen"
+        args="$(find fairy_description)/urdf/fairy.urdf.xacro $(arg robot_type)"/>
+
+    <rosparam file="$(find legged_bridge_hw)/config/$(arg robot_type).yaml" command="load"/>
+
+    <param name="robot_type" value="$(arg robot_type)"/>
+
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+        <param name="publish_frequency" type="double" value="50.0" />
+        <param name="tf_prefix" value="" />
+    </node>
+
+    <rosparam file="$(find legged_bridge_hw)/config/controllers.yaml" command="load"/>
+
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" 
+        respawn="false" output="screen" args="
+            controllers/joint_state_controller"/>
+
+    <node name="legged_bridge_hw" pkg="legged_bridge_hw" type="legged_bridge_hw" respawn="false" clear_params="true" output="screen"/>
+    
+    <node pkg="yesense_imu" type="yesense_imu_node" name="yesense_imu_node" output="screen" respawn="true" respawn_delay="0.002" >
+        <param name="yesense_port"      type="string" value="/dev/ttyACM0"/>
+        <param name="yesense_baudrate"  type="int"    value="460800"/>
+    </node>
+
+
+    <arg name="rvizconfig" default="$(find legged_bridge_hw)/rviz/legged_robot.rviz" />
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rvizconfig)" output="screen" />
+
+</launch>
