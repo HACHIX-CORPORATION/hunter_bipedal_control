@@ -1,25 +1,21 @@
 <?xml version="1.0" ?>
 
 <launch>
-    <arg name="robot_type" default="$(env ROBOT_TYPE)" doc="Robot type: [lt, go1]"/>
     <arg name="rviz" default="true"/>
-
-     <!-- make the files into global parameters -->
-    <param name="debug" value="false"/>
-    <param name="urdfFile"          value="$(find legged_pdd_description)/urdf/pdd.urdf"/>
-    <arg name="urdfFile" default="$(find legged_pdd_description)/urdf/pdd.urdf"/>
-    <param name="taskFile"          value="$(find modified_rl_controllers)/config/hunter/task.info"/>
-    <param name="referenceFile"          value="$(find modified_rl_controllers)/config/hunter/reference.info"/>
-    <param name="gaitCommandFile" value="$(find modified_rl_controllers)/config/hunter/gait.info"/>
-    <arg name="description_name"   default="legged_robot_description"/>
-
+    <arg name="debug" default="false"/>
     <arg name="record_data" default="false"/>
+    <arg name="urdfFile" default="$(find fairy_description)/urdf/fairy.urdf.xacro"/>
 
-    <group if="$(eval robot_type=='pdd')">
-        <include file="$(find legged_bridge_hw)/launch/legged_bridge_hw.launch"/>
-    </group>
+    <param name="debug" value="$(arg debug)"/>
+    <param name="robot_description" textfile="$(arg urdfFile)" />
 
-    <param name="robot_description" textfile="$(find legged_pdd_description)/urdf/pdd.urdf" />
+    <param name="urdfFile"          value="$(arg urdfFile)"/>
+    <param name="taskFile"          value="$(find modified_rl_controllers)/config/fairy/task.info"/>
+    <param name="referenceFile"          value="$(find modified_rl_controllers)/config/fairy/reference.info"/>
+    <param name="gaitCommandFile" value="$(find modified_rl_controllers)/config/fairy/gait.info"/>
+    
+    <include file="$(find legged_bridge_hw)/launch/legged_bridge_hw.launch"/>
+
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
         <param name="publish_frequency" type="double" value="50.0" />
         <param name="tf_prefix" value="" />

@@ -6,7 +6,3 @@ controllers:
     type: legged/RLControllerBase
   custom_ac_controller:
     type: legged/CustomAcController
-  student_policy_controller:
-    type: legged/StudentPolicyController
-  student_stm_controller:
-    type: legged/StudentStmController
