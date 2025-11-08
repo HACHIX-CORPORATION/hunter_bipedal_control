@@ -104,7 +104,7 @@ private:
 
   bool setupContactSensor(ros::NodeHandle& nh);
 
-  EncosMotorData jointData_[10]{};
+  EncosMotorData jointData_[12]{}; //Note: Only first 8 joints are used in fairy
   EncosImuData imuData_{};
   int powerLimit_{};
   int contactThreshold_{};
@@ -122,9 +122,7 @@ private:
     yesenceIMU_ = *odom;
   }
 
-  // const std::vector<int> directionMotor_{ 1, -1, 1, 1, 1, 1, -1, 1, -1, 1, 1, 1 };
-  const std::vector<int> directionMotor_{ 1, -1, -1, 1, -1, 1, -1, 1, -1, 1, 1, 1}; 
-  // const std::vector<int> directionMotor_{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+  const std::vector<int> directionMotor_{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}; 
   float baseMotor_[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 };
 
