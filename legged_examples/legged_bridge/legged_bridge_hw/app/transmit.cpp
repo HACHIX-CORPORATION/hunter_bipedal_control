@@ -363,7 +363,7 @@ void EtherCAT_Get_State()
       {
         motorDate_recv[motor_index].pos_ = rv_motor_msg[motor_index].angle_actual_rad;
         motorDate_recv[motor_index].vel_ = rv_motor_msg[motor_index].speed_actual_rad;
-        if (motor_index == 2 || motor_index == 3)
+        if (motor_index == 0 || motor_index == 1 || motor_index == 2)
         {
           motorDate_recv[motor_index].tau_ = rv_motor_msg[motor_index].current_actual_float * 2.1;
         }
@@ -379,7 +379,7 @@ void EtherCAT_Get_State()
       {
         motorDate_recv[motor_index + 4].pos_ = rv_motor_msg[motor_index].angle_actual_rad;
         motorDate_recv[motor_index + 4].vel_ = rv_motor_msg[motor_index].speed_actual_rad;
-        if (motor_index == 2 || motor_index == 3)
+        if (motor_index == 0 || motor_index == 1 || motor_index == 2)
         {
           motorDate_recv[motor_index + 4].tau_ = rv_motor_msg[motor_index].current_actual_float * 2.1;
         }
