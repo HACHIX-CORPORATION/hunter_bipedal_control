@@ -14,7 +14,7 @@ model_settings
 
   verboseCppAd                  false
   recompileLibrariesCppAd       false
-  modelFolderCppAd              /home/bridge/Desktop/legged_control/hunter
+  modelFolderCppAd              /home/ubuntu/Desktop/legged_control/fairy
 }
 
 
@@ -170,16 +170,14 @@ initialState
    (11,0) 0.0     ; theta_base_x
 
    ;; Leg Joint Positions: [LF, LH, RF, RH] ;
-   (12,0)  0.10   ; leg_l1_joint
-   (13,0)  0.00   ; leg_l2_joint
-   (14,0)  0.40   ; leg_l3_joint
-   (15,0)  0.93   ; leg_l4_joint
-   (16,0)  0.53   ; leg_l5_joint
-   (17,0) -0.10   ; leg_r1_joint
-   (18,0)  0.00   ; leg_r2_joint
-   (19,0) -0.40   ; leg_r3_joint
-   (20,0)  0.93   ; leg_r4_joint
-   (21,0) -0.53   ; leg_r5_joint
+   (12,0)   0.0   ; L_CROTCH_R
+   (13,0)   0.0   ; L_CROTCH_P
+   (14,0)   0.0   ; L_KNEE_P
+   (15,0)   0.0   ; L_TOE_P
+   (16,0)   0.0   ; R_CROTCH_R
+   (17,0)   0.0   ; R_CROTCH_P
+   (18,0)   0.0   ; R_KNEE_P
+   (19,0)   0.0   ; R_TOE_P
 }
 
 ; standard state weight matrix
@@ -204,16 +202,14 @@ Q
   (11,11) 500.0    ; theta_base_x
  
   ;; Leg Joint Positions: [L, R] ;;
-  (12,12)  10.0     ; leg_l1_joint
-  (13,13)  10.0     ; leg_l2_joint
-  (14,14)  10.0     ; leg_l3_joint
-  (15,15)  10.0     ; leg_l4_joint
-  (16,16)  10.0     ; leg_l5_joint
-  (17,17)  10.0     ; leg_r1_joint
-  (18,18)  10.0     ; leg_r2_joint
-  (19,19)  10.0     ; leg_r3_joint
-  (20,20)  10.0     ; leg_r4_joint
-  (21,21)  10.0     ; leg_r5_joint
+  (12,12)   0.0   ; L_CROTCH_R
+  (13,13)   0.0   ; L_CROTCH_P
+  (14,14)   0.0   ; L_KNEE_P
+  (15,15)   0.0   ; L_TOE_P
+  (16,16)   0.0   ; R_CROTCH_R
+  (17,17)   0.0   ; R_CROTCH_P
+  (18,18)   0.0   ; R_KNEE_P
+  (19,19)   0.0   ; R_TOE_P
 }
 
 ; control weight matrix
@@ -289,11 +285,10 @@ selfCollision
 ; Whole body control
 torqueLimitsTask
 {
-   (0,0)  36.0     ; motor 1
-   (1,0)  75.0     ; motor 2
+   (0,0)  90.0     ; motor 1
+   (1,0)  90.0     ; motor 2
    (2,0)  90.0     ; motor 3
-   (3,0)  90.0     ; motor 4
-   (4,0)  36.0     ; motor 5
+   (3,0)  36.0     ; motor 4
 }
 
 frictionConeTask

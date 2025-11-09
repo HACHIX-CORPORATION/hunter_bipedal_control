@@ -68,41 +68,35 @@ bool CustomAcController::loadRLCfg(ros::NodeHandle &nh) {
     controlCfg.stiffness.resize(actuatedDofNum_, 0.0);
     controlCfg.damping.resize(actuatedDofNum_, 0.0);
     // Load leg init state
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_l1_joint", initState.leg_l1_joint));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_l2_joint", initState.leg_l2_joint));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_l3_joint", initState.leg_l3_joint));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_l4_joint", initState.leg_l4_joint));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_l5_joint", initState.leg_l5_joint));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/L_CROTCH_R", initState.L_CROTCH_R));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/L_CROTCH_P", initState.L_CROTCH_P));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/L_KNEE_P", initState.L_KNEE_P));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/L_TOE_P", initState.L_TOE_P));
 
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_r1_joint", initState.leg_r1_joint));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_r2_joint", initState.leg_r2_joint));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_r3_joint", initState.leg_r3_joint));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_r4_joint", initState.leg_r4_joint));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/leg_r5_joint", initState.leg_r5_joint));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/R_CROTCH_R", initState.R_CROTCH_R));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/R_CROTCH_P", initState.R_CROTCH_P));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/R_KNEE_P", initState.R_KNEE_P));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/init_state/default_joint_angle/R_TOE_P", initState.R_TOE_P));
 
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_l1_joint", controlCfg.stiffness[0]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_l2_joint", controlCfg.stiffness[1]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_l3_joint", controlCfg.stiffness[2]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_l4_joint", controlCfg.stiffness[3]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_l5_joint", controlCfg.stiffness[4]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/L_CROTCH_R", controlCfg.stiffness[0]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/L_CROTCH_P", controlCfg.stiffness[1]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/L_KNEE_P", controlCfg.stiffness[2]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/L_TOE_P", controlCfg.stiffness[3]));
     
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_r1_joint", controlCfg.stiffness[5]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_r2_joint", controlCfg.stiffness[6]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_r3_joint", controlCfg.stiffness[7]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_r4_joint", controlCfg.stiffness[8]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/leg_r5_joint", controlCfg.stiffness[9]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/R_CROTCH_R", controlCfg.stiffness[4]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/R_CROTCH_P", controlCfg.stiffness[5]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/R_KNEE_P", controlCfg.stiffness[6]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/stiffness/R_TOE_P", controlCfg.stiffness[7]));
 
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_l1_joint", controlCfg.damping[0]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_l2_joint", controlCfg.damping[1]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_l3_joint", controlCfg.damping[2]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_l4_joint", controlCfg.damping[3]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_l5_joint", controlCfg.damping[4]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/L_CROTCH_R", controlCfg.damping[0]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/L_CROTCH_P", controlCfg.damping[1]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/L_KNEE_P", controlCfg.damping[2]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/L_TOE_P", controlCfg.damping[3]));
 
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_r1_joint", controlCfg.damping[5]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_r2_joint", controlCfg.damping[6]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_r3_joint", controlCfg.damping[7]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_r4_joint", controlCfg.damping[8]));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/leg_r5_joint", controlCfg.damping[9]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/R_CROTCH_R", controlCfg.damping[4]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/R_CROTCH_P", controlCfg.damping[5]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/R_KNEE_P", controlCfg.damping[6]));
+    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/damping/R_TOE_P", controlCfg.damping[7]));
 
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/action_scale", controlCfg.actionScale));
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/control/decimation", controlCfg.decimation));
@@ -117,11 +111,11 @@ bool CustomAcController::loadRLCfg(ros::NodeHandle &nh) {
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/obs_scales/dof_pos", obsScales.dofPos));
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/obs_scales/dof_vel", obsScales.dofVel));
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/obs_scales/quat", obsScales.quat));
-    error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/normalization/obs_scales/height_measurements", obsScales.heightMeasurements));
 
     // load size 
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/size/actions_size", actionsSize_));
     error += static_cast<int>(!nh.getParam("/LeggedRobotCfg/size/observations_size", observationSize_));
+
     actions_.resize(actionsSize_);
     observations_.resize(observationSize_);
     phase_.resize(2);
@@ -133,16 +127,14 @@ bool CustomAcController::loadRLCfg(ros::NodeHandle &nh) {
     command_.yaw = 0.0;
 
     std::vector<scalar_t> defaultJointAngles{
-        initState.leg_l1_joint,
-        initState.leg_l2_joint,
-        initState.leg_l3_joint,
-        initState.leg_l4_joint,
-        initState.leg_l5_joint,
-        initState.leg_r1_joint,
-        initState.leg_r2_joint,
-        initState.leg_r3_joint,
-        initState.leg_r4_joint,
-        initState.leg_r5_joint
+        initState.R_CROTCH_R,
+        initState.R_CROTCH_P,
+        initState.R_KNEE_P,
+        initState.R_TOE_P,
+        initState.L_CROTCH_R,
+        initState.L_CROTCH_P,
+        initState.L_KNEE_P,
+        initState.L_TOE_P
     };
 
     lastActions_.resize(actuatedDofNum_);
@@ -173,9 +165,9 @@ bool CustomAcController::loadRLCfg(ros::NodeHandle &nh) {
             observationCsvFile_ << "loop_count,";
             observationCsvFile_ << "baseAngVel_x,baseAngVel_y,baseAngVel_z,";
             observationCsvFile_ << "IMUzaxis_x,IMUzaxis_y,IMUzaxis_z,";
-            observationCsvFile_ << "deltaJointPos_0,deltaJointPos_1,deltaJointPos_2,deltaJointPos_3,deltaJointPos_4,deltaJointPos_5,deltaJointPos_6,deltaJointPos_7,deltaJointPos_8,deltaJointPos_9,";
-            observationCsvFile_ << "jointVel_0,jointVel_1,jointVel_2,jointVel_3,jointVel_4,jointVel_5,jointVel_6,jointVel_7,jointVel_8,jointVel_9,";
-            observationCsvFile_ << "lastActions_0,lastActions_1,lastActions_2,lastActions_3,lastActions_4,lastActions_5,lastActions_6,lastActions_7,lastActions_8,lastActions_9,";
+            observationCsvFile_ << "deltaJointPos_0,deltaJointPos_1,deltaJointPos_2,deltaJointPos_3,deltaJointPos_4,deltaJointPos_5,deltaJointPos_6,deltaJointPos_7,";
+            observationCsvFile_ << "jointVel_0,jointVel_1,jointVel_2,jointVel_3,jointVel_4,jointVel_5,jointVel_6,jointVel_7,";
+            observationCsvFile_ << "lastActions_0,lastActions_1,lastActions_2,lastActions_3,lastActions_4,lastActions_5,lastActions_6,lastActions_7,";
             observationCsvFile_ << "command_x,command_y,command_yaw,";
             observationCsvFile_ << "gaitFrequency,gait";
             observationCsvFile_ << std::endl;
@@ -222,13 +214,18 @@ void CustomAcController::computeObservation() {
     int generalizedCoordinatesNum = actuatedDofNum_ + 6;
 
     vector3_t zyx = rbdState_.segment(0, 3);
+
     matrix_t rot = getRotationMatrixFromZyxEulerAngles(zyx);
     vector3_t IMUzaxis(rot * vector3_t(0, 0, 1));
+
     matrix_t inverseRot = getRotationMatrixFromZyxEulerAngles(zyx).inverse();
 
-    vector3_t baseLinVel = inverseRot * rbdState_.segment(generalizedCoordinatesNum, 3);
-    vector3_t baseAngVel = rbdState_.segment(generalizedCoordinatesNum + 3, 3);
-    std::cout << "baseLinVel x: " << baseLinVel << std::endl;
+    vector3_t baseLinVel = inverseRot * rbdState_.segment(generalizedCoordinatesNum + 3, 3);
+    
+    vector3_t baseAngVel(imuSensorHandles_.getAngularVelocity()[0],
+                         imuSensorHandles_.getAngularVelocity()[1],
+                         imuSensorHandles_.getAngularVelocity()[2]);
+
     vector3_t command(command_.x, command_.y, command_.yaw);
 
     vector_t jointPos = rbdState_.segment(6, actuatedDofNum_);
@@ -255,15 +252,15 @@ void CustomAcController::computeObservation() {
     // matrix_t commandScaler = Eigen::DiagonalMatrix<scalar_t, 3>(obsScales.linVel, obsScales.linVel, obsScales.angVel);
     
     // get observation
-    vector_t obs(observationSize_); // 43
+    vector_t obs(observationSize_); // 46
 
     obs << 
         baseLinVel,                    // 3
         baseAngVel,                    // 3
         IMUzaxis,                      // 3
-        (jointPos - defaultJointAngles_) * robotCfg_.obsScales.dofPos, // 10 
-        jointVel * robotCfg_.obsScales.dofVel,    // 10
-        lastActions,                    // 10
+        (jointPos - defaultJointAngles_) * robotCfg_.obsScales.dofPos, // 9 
+        jointVel * robotCfg_.obsScales.dofVel,    // 9
+        lastActions,                    // 9
         command,                        // 3
         observed_phase,                 // 4
         gait,                           // 1
@@ -320,33 +317,6 @@ void CustomAcController::handleStandMode() {
         lastActions_(i, 0) = actions_[i];
     }
 }
-
-// void CustomAcController::move2standDetect() {
-//     // Default implementation, override in derived classes
-// }
-
-// void CustomAcController::pushDetect() {
-//     // Default implementation, override in derived classes
-// }
-
-// bool CustomAcController::push2standDetect() {
-//     // Default implementation, override in derived classes
-//     return false;
-// }
-
-// void CustomAcController::quickStop() {
-//     // Default implementation, override in derived classes
-// }
-
-// bool CustomAcController::kinematic() {
-//     // Default implementation, override in derived classes
-//     return false;
-// }
-
-// bool CustomAcController::computeLegForwardKinematics(const std::string &leg_name, const vector_t &joint_positions, KDL::Frame &end_effector_frame) {
-//     // Default implementation, override in derived classes
-//     return false;
-// }
 
 } // namespace legged
 

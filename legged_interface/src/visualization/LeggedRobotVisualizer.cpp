@@ -250,8 +250,8 @@ void LeggedRobotVisualizer::publishJointTransforms(const ros::Time& timeStamp, c
       { "leg_r2_joint", jointAngles[6] }, { "leg_r3_joint", jointAngles[7] }, { "leg_r4_joint", jointAngles[8] },
       { "leg_r5_joint", jointAngles[9] }
     };
-    robotStatePublisherPtr_->publishTransforms(jointPositions, timeStamp, tf_prefix);
-    robotStatePublisherPtr_->publishFixedTransforms(tf_prefix, true);
+    robotStatePublisherPtr_->publishTransforms(jointPositions, timeStamp);
+    robotStatePublisherPtr_->publishFixedTransforms(true);
   }
 }
 

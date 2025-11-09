@@ -2,43 +2,37 @@ LeggedRobotCfg:
   init_state:
     # target angles [rad] when action = 0.0
     default_joint_angle:
-      leg_l1_joint: 0.0
-      leg_l2_joint: -0.0
-      leg_l3_joint: -0.36
-      leg_l4_joint: 0.72
-      leg_l5_joint: -0.36
-      leg_r1_joint: 0.0
-      leg_r2_joint: -0.05
-      leg_r3_joint: -0.36
-      leg_r4_joint: 0.72
-      leg_r5_joint: -0.36
+      L_CROTCH_R: 0.0
+      L_CROTCH_P: 0.0 
+      L_KNEE_P: 0.0
+      L_TOE_P: 0.0
+      R_CROTCH_R: 0.0
+      R_CROTCH_P: 0.0
+      R_KNEE_P: 0.0
+      R_TOE_P: 0.0
 
   control:
     stiffness:
-      leg_l1_joint: 15.0
-      leg_l2_joint: 5.0
-      leg_l3_joint: 15.0
-      leg_l4_joint: 25.0
-      leg_l5_joint: 5.0
-      leg_r1_joint: 15.0
-      leg_r2_joint: 5.0
-      leg_r3_joint: 15.0
-      leg_r4_joint: 25.0
-      leg_r5_joint: 5.0
+      L_CROTCH_R: 25.0
+      L_CROTCH_P: 25.0 
+      L_KNEE_P: 25.0
+      L_TOE_P: 15.0
+      R_CROTCH_R: 25.0
+      R_CROTCH_P: 25.0
+      R_KNEE_P: 25.0
+      R_TOE_P: 15.0
     damping:
-      leg_l1_joint: 1.0
-      leg_l2_joint: 0.5
-      leg_l3_joint: 1.5
-      leg_l4_joint: 2.5
-      leg_l5_joint: 0.1
-      leg_r1_joint: 1.0
-      leg_r2_joint: 0.5
-      leg_r3_joint: 1.5
-      leg_r4_joint: 2.5
-      leg_r5_joint: 0.1
+      L_CROTCH_R: 2.5
+      L_CROTCH_P: 2.5  
+      L_KNEE_P: 2.5
+      L_TOE_P: 1.5
+      R_CROTCH_R: 2.5
+      R_CROTCH_P: 2.5
+      R_KNEE_P: 2.5
+      R_TOE_P: 1.5
+
     action_scale: 0.5
     decimation: 10.0
-    cycle_time: 0.64
 
   normalization:
     clip_scales:
@@ -50,61 +44,7 @@ LeggedRobotCfg:
       dof_pos: 1
       dof_vel: 0.05
       quat: 1
-      height_measurements: 5.0
-      cycle_time: 0.64
-
 
   size:
-    actions_size: 10
-    observations_size: 49
-    num_hist: 66
-
-  mode:
-    sw_mode: true
-    # pushDetect()使用
-    # 大于 cmd_threshold*0.4 且小于 cmd_threshold 即为急停，急停会增加踏步周期
-    # 该参数决定 lin_vel_indicator 的检测与 quickStop 的触发
-    # 值过大，push检测的灵敏度降低；值过小，会误判机器人未达到平衡状态
-    # >= cmd_threshold * 8 达到被推的检测阈值，平衡状态被打破，开始踏步
-    # 目前认为不适合用作平衡检测，会拉低检测灵敏度
-    cmd_threshold: 0.07
-    # 该参数决定 ang_vel_indicator 的检测
-    # >= ang_vel_threshold 达到角速度检测阈值，平衡状态被打破，开始踏步
-    # 0.05值偏小，会误判机器人未达到平衡状态；0.1偏大，拉低检测灵敏度
-    ang_vel_threshold: 0.12
-    # 该参数决定 angle_x/y_indicator 与 delta_angle_x/y 的检测
-    # 角度变化阈值，角度变化大于该阈值，平衡状态被打破，开始踏步
-    # 0.05值偏小，会误判机器人未达到平衡状态；0.1偏大，拉低检测灵敏度
-    # angle_threshold: 0.03
-    angle_threshold: 0.033
-    # 该参数决定机器人 delta_pos_x/y_indicator 与 pos_x/y_indicator 的检测
-    # x，y方向机器人位移偏差阈值，位移偏差大于该阈值，平衡状态被打破，开始踏步
-    # 对于pos_x_indicator检测，X 方向值越小检测越灵敏
-    # X 方向单用该值目前表现最好
-    pos_x_threshold: 0.025
-    # y方向位移偏差阈值适用于机器人侧面被push的情况
-    # 对于pos_y_indicator检测，Y 方向值越大检测越灵敏
-    # 对于delta_pos_y_indicator检测，Y 方向值越小检测越灵敏
-    pos_y_threshold: 0.05
-    #------------------------------
-    pos_z_threshold: 0.6
-    #------------------------------
-    # move2standDetect()使用
-    # 同时满足计数器达到500与关节速度<2时，机器人完成从运动到静止的状态
-    move2standDetector_counter_threshold: 500
-    joint_vel_threshold: 1.0
-    # push2standDetect() 使用
-    # 该参数影响机器人判断自己是否达到平衡状态
-    # 双足在 x 方向的偏差值，push2standDetect返回true,机器人达到平衡
-    # 0.25会站好后踏步一下再停止
-    feet_delta_x_threshold: 0.045
-    #--------------------------------
-    feet_delta_y_threshold: 0.15
-    feet_delta_z_threshold: 0.1
-    #--------------------------------
-    # 踏步死区时间，超过以后才运行 push2standDetect 判断是否达到平衡状态
-    pushDetector_counter_threshold: 150
-  filter:
-    filt_action: false
-    sample_rate: 500
-    cutoff_freq: 10    
+    actions_size: 9
+    observations_size: 46

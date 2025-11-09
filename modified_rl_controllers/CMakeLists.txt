@@ -16,15 +16,15 @@ find_package(catkin REQUIRED
         )
 
 # Manually configure onnxruntime for catkin compatibility
-set(onnxruntime_INCLUDE_DIRS "/opt/ros/noetic/include/onnxruntime")
-set(onnxruntime_LIBRARIES "/opt/ros/noetic/lib/libonnxruntime.so")
+set(onnxruntime_INCLUDE_DIRS "/home/ubuntu/miniconda3/envs/ros1-noetic/include/onnxruntime/core/session")
+set(onnxruntime_LIBRARIES "/home/ubuntu/miniconda3/envs/ros1-noetic/lib/libonnxruntime.so")
 set(onnxruntime_FOUND TRUE)
 
 # Create imported target for onnxruntime
 add_library(onnxruntime SHARED IMPORTED)
 set_target_properties(onnxruntime PROPERTIES
-    IMPORTED_LOCATION "/opt/ros/noetic/lib/libonnxruntime.so"
-    INTERFACE_INCLUDE_DIRECTORIES "/opt/ros/noetic/include/onnxruntime"
+    IMPORTED_LOCATION "/home/ubuntu/miniconda3/envs/ros1-noetic/lib/libonnxruntime.so"
+    INTERFACE_INCLUDE_DIRECTORIES "/home/ubuntu/miniconda3/envs/ros1-noetic/include/onnxruntime/core/session"
 )
 find_package(PkgConfig REQUIRED)
 find_package(Eigen3 REQUIRED)

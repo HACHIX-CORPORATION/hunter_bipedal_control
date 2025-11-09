@@ -6,16 +6,14 @@ comHeight                           0.63
 
 defaultJointState
 {
-   (0,0)   0.10   ; leg_l1_joint
-   (1,0)   0.00   ; leg_l2_joint
-   (2,0)   0.40   ; leg_l3_joint
-   (3,0)   0.93   ; leg_l4_joint
-   (4,0)   0.53   ; leg_l5_joint
-   (5,0)  -0.10   ; leg_r1_joint
-   (6,0)   0.00   ; leg_r2_joint
-   (7,0)  -0.40   ; leg_r3_joint
-   (8,0)   0.93   ; leg_r4_joint
-   (9,0)  -0.53   ; leg_r5_joint
+   (0,0)   0.0   ; L_CROTCH_R
+   (1,0)   0.0   ; L_CROTCH_P
+   (2,0)   0.0   ; L_KNEE_P
+   (3,0)   0.0   ; L_TOE_P
+   (4,0)   0.0   ; R_CROTCH_R
+   (5,0)   0.0   ; R_CROTCH_P
+   (6,0)   0.0   ; R_KNEE_P
+   (7,0)   0.0   ; R_TOE_P
 }
 
 initialModeSchedule

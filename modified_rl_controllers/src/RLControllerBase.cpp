@@ -17,8 +17,12 @@ bool RLControllerBase::init(hardware_interface::RobotHW *robotHw, ros::NodeHandl
 	loadData::loadCppDataType(taskFile, "legged_robot_interface.verbose", verbose);
 	setupLeggedInterface(taskFile, urdfFile, referenceFile, verbose);
 	CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
+
 	eeKinematicsPtr_ = std::make_shared<PinocchioEndEffectorKinematics>(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
 	leggedInterface_->modelSettings().contactNames3DoF); 
+
+	rbdConversions_ = std::make_shared<CentroidalModelRbdConversions>(leggedInterface_->getPinocchioInterface(),
+	leggedInterface_->getCentroidalModelInfo()); 
 
 	if (!loadModel(controllerNH)) {
 		ROS_ERROR_STREAM("[RLControllerBase] Failed to load the model. Ensure the path is correct and accessible.");
@@ -35,25 +39,24 @@ bool RLControllerBase::init(hardware_interface::RobotHW *robotHw, ros::NodeHandl
 	// Get default stand joint angles
 	ROS_INFO_STREAM("[RLControllerBase] actuatedDofNum: " << actuatedDofNum_);
 	standJointAngles_.resize(actuatedDofNum_);
-	rbdState_ = vector_t::Zero(2*(actuatedDofNum_ + 6));
+	// rbdState_ = vector_t::Zero(2*(actuatedDofNum_ + 6));
 
 	auto& initState = robotCfg_.initState; 
 
-	standJointAngles_ << initState.leg_l1_joint, 
-	initState.leg_l2_joint, 
-	initState.leg_l3_joint, 
-	initState.leg_l4_joint, 
-	initState.leg_l5_joint,
-	initState.leg_r1_joint,
-	initState.leg_r2_joint,
-	initState.leg_r3_joint,
-	initState.leg_r4_joint,
-	initState.leg_r5_joint;
+	standJointAngles_ << initState.L_CROTCH_R,
+		initState.L_CROTCH_P,
+		initState.L_KNEE_P,
+		initState.L_TOE_P,
+		initState.R_CROTCH_R,
+		initState.R_CROTCH_P,
+		initState.R_KNEE_P,
+		initState.R_TOE_P;
+
 	ROS_INFO_STREAM("[RLControllerBase] Stand joint angles: " << standJointAngles_.transpose());
 
 	// Hardware interface
 	auto* hybridJointInterface = robotHw->get<HybridJointInterface>();
-	const std::vector<std::string> jointNames = {"leg_l1_joint", "leg_l2_joint", "leg_l3_joint", "leg_l4_joint", "leg_l5_joint", "leg_r1_joint", "leg_r2_joint", "leg_r3_joint", "leg_r4_joint", "leg_r5_joint"};
+	const std::vector<std::string> jointNames = {"L_CROTCH_R", "L_CROTCH_P", "L_KNEE_P", "L_TOE_P", "R_CROTCH_R", "R_CROTCH_P", "R_KNEE_P", "R_TOE_P"};
 	std::string jointNamesStr;
 	for (const auto& jointName : jointNames) {
 		hybridJointHandles_.push_back(hybridJointInterface->getHandle(jointName)); 
@@ -110,7 +113,7 @@ void RLControllerBase::update(const ros::Time &time, const ros::Duration &period
 		  handleWalkMode();
 		  break;
 		case Mode::DEFAULT:
-		  handleDefautMode();
+		  handleDefaultMode();
 		  break;
 		default:
 		  ROS_ERROR_STREAM("Unexpected mode encountered: " << static_cast<int>(mode_));
@@ -120,20 +123,7 @@ void RLControllerBase::update(const ros::Time &time, const ros::Duration &period
 	loopCount_++;
 }
 
-void RLControllerBase::handleLieMode() {
-
-}
-
-void RLControllerBase::handleStandMode() {
-
-}
-
-void RLControllerBase::handleWalkMode() {
-
-}
-
-void RLControllerBase::handleDefautMode() {
-	//  TODO: Implement default mode behavior
+void RLControllerBase::handleDefaultMode() {
 	for (int j = 0; j < hybridJointHandles_.size(); j++) {
 		scalar_t pos_des = currentJointAngles_[j] * (1 - standPercent_) + standJointAngles_(j) * standPercent_;
 		hybridJointHandles_[j].setCommand(pos_des, 0, robotCfg_.controlCfg.stiffness[j], robotCfg_.controlCfg.damping[j], 0);
@@ -148,7 +138,6 @@ void RLControllerBase::handleDefautMode() {
 // }
 
 void RLControllerBase::updateStateEstimation(const ros::Time &time, const ros::Duration &period) {
-	int generalizedCoordinatesNum = actuatedDofNum_ + 6;
 	vector_t jointPos(hybridJointHandles_.size()), jointVel(hybridJointHandles_.size());
 	Eigen::Quaternion<scalar_t> quat;
 	vector3_t angularVel, linearAccel;
@@ -174,17 +163,10 @@ void RLControllerBase::updateStateEstimation(const ros::Time &time, const ros::D
 		linearAccelCovariance(i) = imuSensorHandles_.getLinearAccelerationCovariance()[i];
 	}
 
-    rbdState_.segment(0, 3) = quatToZyx(quat);
-	rbdState_.segment(3, 3) = vector3_t::Zero(); // TODO: estimate base position
-	rbdState_.segment(6, actuatedDofNum_) = jointPos;
-	rbdState_.segment(generalizedCoordinatesNum, 3) = linearAccel; // TODO: estimate base linear velocity
-
-	rbdState_.segment(generalizedCoordinatesNum + 3, 3) = angularVel;
-	rbdState_.segment(generalizedCoordinatesNum + 6, actuatedDofNum_) = jointVel;
 	stateEstimate_->updateJointStates(jointPos, jointVel);
 	stateEstimate_->updateImu(quat, angularVel, linearAccel, orientationCovariance, angularVelCovariance, linearAccelCovariance);
-	estimatedRbdState_ = stateEstimate_->update(time, period);
-	rbdState_.segment(generalizedCoordinatesNum, 3) = estimatedRbdState_.segment<3>(generalizedCoordinatesNum + 3);
+	rbdState_ = stateEstimate_->update(time, period);
+
 }
 
 void RLControllerBase::cmdVelCallback(const geometry_msgs::Twist &msg) {
