@@ -1,23 +1,14 @@
 <launch>
-  <!-- Gazebo起動 -->
-  <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="paused" value="false"/>
-    <arg name="use_sim_time" value="true"/>
-    <arg name="gui" value="true"/>
-    <arg name="headless" value="false"/>
-    <arg name="debug" value="false"/>
-  </include>
-
-  <!-- ロボットのURDFをロード -->
+  <arg name="rvizconfig" default="$(find fairy_description)/rviz/display.rviz"/>
   <param name="robot_description" command="$(find xacro)/xacro '$(find fairy_description)/urdf/fairy.urdf.xacro'" />
-  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model fairy" />
 
-  <!-- コントローラの設定をロード -->
-  <rosparam file="$(find fairy_gazebo)/config/controllers.yaml" command="load" />
-
-  <!-- controller_managerの起動とspawnerの起動 -->
-  <node name="controller_spawner" pkg="controller_manager" type="spawner" args="joint_state_controller left_forward_controller right_forward_controller left_back_controller right_back_controller" respawn="false" output="screen">
-    <rosparam command="load" file="$(find fairy_gazebo)/config/controllers.yaml" />
-    <remap from="controller_manager" to="/controller_manager" />
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+      <param name="publish_frequency" type="double" value="50.0" />
+      <param name="tf_prefix" value="" />
   </node>
+
+  <node name="joint_state_publisher_gui" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" />
+  
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rvizconfig)" output="screen" />
+
 </launch>
