@@ -61,6 +61,9 @@ bool RLControllerBase::init(hardware_interface::RobotHW *robotHw, ros::NodeHandl
 	}
 	imuSensorHandles_ = robotHw->get<hardware_interface::ImuSensorInterface>()->getHandle("base_imu");
 
+	// State estimation
+	setupStateEstimate(taskFile, verbose);
+
 	// Register callbacks
 	cmdVelSub_ = controllerNH.subscribe("/cmd_vel", 1, &RLControllerBase::cmdVelCallback, this);
 	joyInfoSub_ = controllerNH.subscribe("/joy", 1, &RLControllerBase::joyInfoCallback, this);

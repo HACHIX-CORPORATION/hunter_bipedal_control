@@ -2,7 +2,7 @@
 
 <launch>
     <arg name="robot_type" default="$(env ROBOT_TYPE)" doc="Robot type: [lt, go1]"/>
-    <arg name="rviz" default="true"/>
+    <arg name="rviz" default="false"/>
 
      <!-- make the files into global parameters -->
     <param name="debug" value="false"/>

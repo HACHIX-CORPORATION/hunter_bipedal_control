@@ -126,7 +126,7 @@ bool CustomAcController::loadRLCfg(ros::NodeHandle &nh) {
     observations_.resize(observationSize_);
     phase_.resize(2);
 
-    phase_ << 0.0, M_PI;
+    phase_ << 0.0, 0.0;
 
     command_.x = 0.0;
     command_.y = 0.0;
@@ -228,7 +228,7 @@ void CustomAcController::computeObservation() {
 
     vector3_t baseLinVel = inverseRot * rbdState_.segment(generalizedCoordinatesNum, 3);
     vector3_t baseAngVel = rbdState_.segment(generalizedCoordinatesNum + 3, 3);
-    std::cout << "baseLinVel x: " << baseLinVel << std::endl;
+
     vector3_t command(command_.x, command_.y, command_.yaw);
 
     vector_t jointPos = rbdState_.segment(6, actuatedDofNum_);
@@ -239,7 +239,7 @@ void CustomAcController::computeObservation() {
 
     // Note: This values are hardcoded for walking mode
     scalar_t gait = 1.0;
-    scalar_t gait_frequency = 1.75;
+    scalar_t gait_frequency = 1.5;
     scalar_t foot_height = 0.16;
     scalar_t phase_dt = 2 * M_PI * gait_frequency * (0.002 * robotCfg_.controlCfg.decimation);
 
@@ -258,23 +258,19 @@ void CustomAcController::computeObservation() {
     vector_t obs(observationSize_); // 43
 
     obs << 
-        baseLinVel,                    // 3
+        baseLinVel * robotCfg_.obsScales.linVel,    // 3
         baseAngVel,                    // 3
         IMUzaxis,                      // 3
         (jointPos - defaultJointAngles_) * robotCfg_.obsScales.dofPos, // 10 
         jointVel * robotCfg_.obsScales.dofVel,    // 10
         lastActions,                    // 10
         command,                        // 3
-        observed_phase,                 // 4
-        gait,                           // 1
-        gait_frequency,                 // 1
-        foot_height                     // 1
-        ;
+        observed_phase;
 
     // clip observation
     for (size_t i = 0; i < obs.size(); i++) {
         observations_[i] = static_cast<tensor_element_t>(obs(i));
-        }
+    }
 
     scalar_t obsMin = -robotCfg_.clipObs;
     scalar_t obsMax = robotCfg_.clipObs;

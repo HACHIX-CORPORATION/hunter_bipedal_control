@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import os
 from enum import IntEnum
 
-LOG_DIR = f"{os.path.dirname(os.path.abspath(__file__))}/20251003_160559"
+LOG_DIR = f"{os.path.dirname(os.path.abspath(__file__))}/20251015_194126"
 OBSERVATION_DATA_FILENAME = "observation_data.csv"
 ACTION_DATA_FILENAME = "action_data.csv"
 LOOP_RATE = 0.002
@@ -23,47 +23,55 @@ DEFAULT_JOINT_ANGLE = np.array([
 
 class ObservationIndex(IntEnum):
     LOOP_COUNT = 0
-    BASEANGVEL_X = 1
-    BASEANGVEL_Y = 2
-    BASEANGVEL_Z = 3
-    IMUZAXIS_X = 4
-    IMUZAXIS_Y = 5
-    IMUZAXIS_Z = 6
-    DELTAJOINTPOS_0 = 7
-    DELTAJOINTPOS_1 = 8
-    DELTAJOINTPOS_2 = 9
-    DELTAJOINTPOS_3 = 10
-    DELTAJOINTPOS_4 = 11
-    DELTAJOINTPOS_5 = 12
-    DELTAJOINTPOS_6 = 13
-    DELTAJOINTPOS_7 = 14
-    DELTAJOINTPOS_8 = 15
-    DELTAJOINTPOS_9 = 16
-    JOINTVEL_0 = 17
-    JOINTVEL_1 = 18
-    JOINTVEL_2 = 19
-    JOINTVEL_3 = 20
-    JOINTVEL_4 = 21
-    JOINTVEL_5 = 22
-    JOINTVEL_6 = 23
-    JOINTVEL_7 = 24
-    JOINTVEL_8 = 25
-    JOINTVEL_9 = 26
-    LASTACTIONS_0 = 27
-    LASTACTIONS_1 = 28
-    LASTACTIONS_2 = 29
-    LASTACTIONS_3 = 30
-    LASTACTIONS_4 = 31
-    LASTACTIONS_5 = 32
-    LASTACTIONS_6 = 33
-    LASTACTIONS_7 = 34
-    LASTACTIONS_8 = 35
-    LASTACTIONS_9 = 36
-    COMMAND_X = 37
-    COMMAND_Y = 38
-    COMMAND_YAW = 39
-    GAITFREQUENCY = 40
-    GAIT = 41
+    BASELINVEL_X = 1
+    BASELINVEL_Y = 2
+    BASELINVEL_Z = 3
+    BASEANGVEL_X = 4
+    BASEANGVEL_Y = 5
+    BASEANGVEL_Z = 6
+    IMUZAXIS_X = 7
+    IMUZAXIS_Y = 8
+    IMUZAXIS_Z = 9
+    DELTAJOINTPOS_0 = 10
+    DELTAJOINTPOS_1 = 11
+    DELTAJOINTPOS_2 = 12
+    DELTAJOINTPOS_3 = 13
+    DELTAJOINTPOS_4 = 14
+    DELTAJOINTPOS_5 = 15
+    DELTAJOINTPOS_6 = 16
+    DELTAJOINTPOS_7 = 17
+    DELTAJOINTPOS_8 = 18
+    DELTAJOINTPOS_9 = 19
+    JOINTVEL_0 = 20
+    JOINTVEL_1 = 21
+    JOINTVEL_2 = 22
+    JOINTVEL_3 = 23
+    JOINTVEL_4 = 24
+    JOINTVEL_5 = 25
+    JOINTVEL_6 = 26
+    JOINTVEL_7 = 27
+    JOINTVEL_8 = 28
+    JOINTVEL_9 = 29
+    LASTACTIONS_0 = 30
+    LASTACTIONS_1 = 31
+    LASTACTIONS_2 = 32
+    LASTACTIONS_3 = 33
+    LASTACTIONS_4 = 34
+    LASTACTIONS_5 = 35
+    LASTACTIONS_6 = 36
+    LASTACTIONS_7 = 37
+    LASTACTIONS_8 = 38
+    LASTACTIONS_9 = 39
+    COMMAND_X = 40
+    COMMAND_Y = 41
+    COMMAND_YAW = 42
+    PHASE_COS_0 = 43
+    PHASE_COS_1 = 44
+    PHASE_SIN_0 = 45
+    PHASE_SIN_1 = 46
+    GAITFREQUENCY = 47
+    GAIT = 48
+    FOOT_HEIGHT = 49
 
 class ActionIndex(IntEnum):
     LOOP_COUNT = 0
@@ -95,11 +103,41 @@ if __name__ == "__main__":
     # Create time axis based on loop count and control time step
     time_axis = observation_data[:, ObservationIndex.LOOP_COUNT] * LOOP_RATE
     
+    # Figure 0: Linear Velocity (3 subplots)
+    fig0, axes0 = plt.subplots(3, 1, figsize=(12, 10))
+    fig0.suptitle('Observation: Base Linear Velocity', fontsize=14, y=1.05)
+    plt.subplots_adjust(top=0.93)   
+    
+    # Plot BASELINVEL_X
+    axes0[0].plot(time_axis, observation_data[:, ObservationIndex.BASELINVEL_X], 'b-', linewidth=1)
+    axes0[0].set_ylabel('Base Lin Vel X (m/s)')
+    axes0[0].grid(True, alpha=0.3)
+    axes0[0].set_title('Base Linear Velocity X')
+    
+    # Plot BASELINVEL_Y
+    axes0[1].plot(time_axis, observation_data[:, ObservationIndex.BASELINVEL_Y], 'g-', linewidth=1)
+    axes0[1].set_ylabel('Base Lin Vel Y (m/s)')
+    axes0[1].grid(True, alpha=0.3)
+    axes0[1].set_title('Base Linear Velocity Y')
+    
+    # Plot BASELINVEL_Z
+    axes0[2].plot(time_axis, observation_data[:, ObservationIndex.BASELINVEL_Z], 'r-', linewidth=1)
+    axes0[2].set_ylabel('Base Lin Vel Z (m/s)')
+    axes0[2].set_xlabel('Time (s)')
+    axes0[2].grid(True, alpha=0.3)
+    axes0[2].set_title('Base Linear Velocity Z')
+
+    plt.tight_layout()
+    plt.savefig(f"{result_dir}/observation_base_linear_velocity.png", dpi=300,
+                bbox_inches='tight')
+    plt.close()
+    print("- observation_base_linear_velocity.png")
+
     # Figure 1: Base Angular Velocity (3 subplots)
     fig1, axes1 = plt.subplots(3, 1, figsize=(12, 10))
     fig1.suptitle('Observation: Base Angular Velocity', fontsize=14, y=1.05)
     plt.subplots_adjust(top=0.93)
-    
+
     # Plot BASEANGVEL_X
     axes1[0].plot(time_axis, observation_data[:, ObservationIndex.BASEANGVEL_X], 'b-', linewidth=1)
     axes1[0].set_ylabel('Base Ang Vel X (rad/s)')
@@ -275,6 +313,37 @@ if __name__ == "__main__":
     plt.close()
     print("- observation_command_data.png")
 
+    # Figure 8-2: Phase cos and sin
+    fig8_2, axes8_2 = plt.subplots(4, 1, figsize=(12, 12))
+    fig8_2.suptitle('Observation: Phase Data', fontsize=14, y=1.05)
+    plt.subplots_adjust(top=0.93)
+    # Plot PHASE_COS_0
+    axes8_2[0].plot(time_axis, observation_data[:, ObservationIndex.PHASE_COS_0], 'b-', linewidth=1)
+    axes8_2[0].set_ylabel('Phase Cos 0')
+    axes8_2[0].grid(True, alpha=0.3)
+    axes8_2[0].set_title('Phase Cos 0')
+    # Plot PHASE_COS_1
+    axes8_2[1].plot(time_axis, observation_data[:, ObservationIndex.PHASE_COS_1], 'g-', linewidth=1)
+    axes8_2[1].set_ylabel('Phase Cos 1')
+    axes8_2[1].grid(True, alpha=0.3)
+    axes8_2[1].set_title('Phase Cos 1')
+    # Plot PHASE_SIN_0
+    axes8_2[2].plot(time_axis, observation_data[:, ObservationIndex.PHASE_SIN_0], 'r-', linewidth=1)
+    axes8_2[2].set_ylabel('Phase Sin 0')
+    axes8_2[2].grid(True, alpha=0.3)
+    axes8_2[2].set_title('Phase Sin 0')
+    # Plot PHASE_SIN_1
+    axes8_2[3].plot(time_axis, observation_data[:, ObservationIndex.PHASE_SIN_1], 'm-', linewidth=1)
+    axes8_2[3].set_ylabel('Phase Sin 1')
+    axes8_2[3].set_xlabel('Time (s)')
+    axes8_2[3].grid(True, alpha=0.3)
+    axes8_2[3].set_title('Phase Sin 1')
+
+    plt.tight_layout()
+    plt.savefig(f"{result_dir}/observation_phase_data.png", dpi=300, bbox_inches='tight')
+    plt.close()
+    print("- observation_phase_data.png")
+
     # Figure 9: Gait frequency and gait type
     fig9, axes9 = plt.subplots(2, 1, figsize=(12, 8))
     fig9.suptitle('Observation: Gait Data', fontsize=14, y=1.05)
@@ -297,6 +366,22 @@ if __name__ == "__main__":
     plt.savefig(f"{result_dir}/observation_gait_data.png", dpi=300, bbox_inches='tight')
     plt.close()
     print("- observation_gait_data.png")
+
+    # Figure 9-2: Foot height
+    fig9_2, axes9_2 = plt.subplots(1, 1, figsize=(12, 5))
+    fig9_2.suptitle('Observation: Foot Height', fontsize=14, y=1.05)
+    plt.subplots_adjust(top=0.93)
+    axes9_2.plot(time_axis, observation_data[:, ObservationIndex.FOOT_HEIGHT], 'b-', linewidth=1)
+    axes9_2.set_ylabel('Foot Height (m)')
+    axes9_2.set_xlabel('Time (s)')
+    axes9_2.grid(True, alpha=0.3)
+    axes9_2.set_title('Foot Height')
+
+    plt.tight_layout()
+    plt.savefig(f"{result_dir}/observation_foot_height.png", dpi=300,
+                bbox_inches='tight')
+    plt.close()
+    print("- observation_foot_height.png")
 
     # Figure 10: Left leg action data (index 0-4)
     fig10, axes10 = plt.subplots(5, 1, figsize=(12, 15))

@@ -88,9 +88,12 @@ void BridgeHW::write(const ros::Time& time, const ros::Duration& period)
 
     if (i == 0 || i == 1 || i == 5 || i == 6)
     {
-      yksSendcmd_[i].kp_ = 0.7 * jointData_[i].kp_;
-      yksSendcmd_[i].kd_ = 0.7 * jointData_[i].kd_;
-      yksSendcmd_[i].ff_ = 0.7 * jointData_[i].ff_ * directionMotor_[i];
+      // yksSendcmd_[i].kp_ = 0.7 * jointData_[i].kp_;
+      // yksSendcmd_[i].kd_ = 0.7 * jointData_[i].kd_;
+      // yksSendcmd_[i].ff_ = 0.7 * jointData_[i].ff_ * directionMotor_[i];
+      yksSendcmd_[i].kp_ = jointData_[i].kp_;
+      yksSendcmd_[i].kd_ = jointData_[i].kd_;
+      yksSendcmd_[i].ff_ = jointData_[i].ff_ * directionMotor_[i];
     }
     else
     {
